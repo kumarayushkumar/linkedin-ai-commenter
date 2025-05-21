@@ -5,7 +5,8 @@
   "description": "Automatically comments 'nice post' on LinkedIn posts",
   "permissions": [
     "activeTab",
-    "scripting"
+    "scripting",
+    "storage"
   ],
   "action": {
     "default_popup": "src/popup/popup.html"
@@ -13,7 +14,7 @@
   "content_scripts": [
     {
       "matches": ["*://*.linkedin.com/*"],
-      "js": ["src/content.js"]
+      "js": ["src/config.js", "src/content.js"]
     }
   ],
   "background": {

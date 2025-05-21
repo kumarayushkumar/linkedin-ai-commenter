@@ -16,12 +16,15 @@ p {
     line-height: 1.4;
 }
 
-.status {
-    margin-top: 15px;
+.btn {
+    margin-top: 0.5rem;
     padding: 10px;
-    background-color: #e6f3ff;
     border-radius: 4px;
     color: #0a66c2;
     font-size: 14px;
     text-align: center;
+}
+
+.btn:hover {
+    background-color: #e6f0ff;
 }
