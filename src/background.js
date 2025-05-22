@@ -1,7 +1,7 @@
 // LinkedIn Auto Commenter - Background Script
 // Handles extension initialization and side panel management
 
-import { STORAGE_KEYS } from './services/storage.js';
+import StorageService, { STORAGE_KEYS } from './services/storage.js';
 import { DEFAULT_PROMPT } from './utils/constants.js';
 import { isApiAvailable } from './utils/helpers.js';
 
@@ -57,11 +57,8 @@ async function initializeStorage() {
       return;
     }
 
-    // Import the storage service
-    const { default: StorageHandler } = await import('./services/storage.js');
-    
     // Initialize with default values
-    await StorageHandler.set({
+    await StorageService.set({
       [STORAGE_KEYS.EXTENSION_ACTIVE]: true,
       [STORAGE_KEYS.DEFAULT_PROMPT]: DEFAULT_PROMPT
     });

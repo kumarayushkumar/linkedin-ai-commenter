@@ -1,7 +1,7 @@
 // LinkedIn Auto Commenter - Side Panel Script
 // Handles side panel UI and interactions
 
-import StorageHandler, { STORAGE_KEYS } from '../services/storage.js';
+import StorageService, { STORAGE_KEYS } from '../services/storage.js';
 
 /**
  * UI handler for the side panel
@@ -100,7 +100,7 @@ class SidePanelUI {
       }
       
       // Get the last post text from storage
-      const result = await StorageHandler.get([STORAGE_KEYS.LAST_POST_TEXT]);
+      const result = await StorageService.get([STORAGE_KEYS.LAST_POST_TEXT]);
       const postText = result[STORAGE_KEYS.LAST_POST_TEXT];
       
       if (!postText) {
@@ -111,7 +111,7 @@ class SidePanelUI {
       }
       
       // Get custom prompt from storage
-      const customPrompt = await StorageHandler.get(STORAGE_KEYS.CUSTOM_PROMPT);
+      const customPrompt = await StorageService.get(STORAGE_KEYS.CUSTOM_PROMPT);
       
       // Generate 3 comment variants
       const comments = await this.openAIService.generateComment(postText, customPrompt, {
@@ -154,7 +154,7 @@ class SidePanelUI {
     this.saveBtn.addEventListener('click', async () => {
       const promptNote = document.querySelector('.prompt-note');
       
-      await StorageHandler.set({ 
+      await StorageService.set({ 
         [STORAGE_KEYS.CUSTOM_PROMPT]: this.promptInput.value,
         [STORAGE_KEYS.EXTENSION_ACTIVE]: this.activeToggle.checked
       });
@@ -175,7 +175,7 @@ class SidePanelUI {
           this.promptInput.value = response.defaultPrompt;
           
           // Clear the custom prompt from storage
-          await StorageHandler.set({ [STORAGE_KEYS.CUSTOM_PROMPT]: '' });
+          await StorageService.set({ [STORAGE_KEYS.CUSTOM_PROMPT]: '' });
           
           // Update the prompt note to indicate we're using the default prompt
           promptNote.textContent = "This is the default prompt. You can customize it to control how the AI generates comments.";
@@ -187,13 +187,13 @@ class SidePanelUI {
     });
     
     this.activeToggle.addEventListener('change', async () => {
-      await StorageHandler.set({ [STORAGE_KEYS.EXTENSION_ACTIVE]: this.activeToggle.checked });
+      await StorageService.set({ [STORAGE_KEYS.EXTENSION_ACTIVE]: this.activeToggle.checked });
     });
   }
   
   // Load settings from storage
   async loadSettings() {
-    const result = await StorageHandler.get([STORAGE_KEYS.CUSTOM_PROMPT, STORAGE_KEYS.EXTENSION_ACTIVE]);
+    const result = await StorageService.get([STORAGE_KEYS.CUSTOM_PROMPT, STORAGE_KEYS.EXTENSION_ACTIVE]);
     const promptNote = document.querySelector('.prompt-note');
     
     // If user has a custom prompt saved, use that

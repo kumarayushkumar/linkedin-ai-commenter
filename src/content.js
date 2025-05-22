@@ -79,7 +79,8 @@
     async function handleCommentClick(event) {
       try {
         // Check if extension is active
-        const isActive = await storageService.getExtensionState();
+        const result = await storageService.get(STORAGE_KEYS.EXTENSION_ACTIVE);
+        const isActive = result[STORAGE_KEYS.EXTENSION_ACTIVE] !== false;
         if (!isActive) return;
         
         // Find post element and extract text
@@ -87,7 +88,7 @@
         const postText = extractPostText(postElement);
         
         // Save post text for side panel
-        await storageService.savePostText(postText);
+        await storageService.set({ [STORAGE_KEYS.LAST_POST_TEXT]: postText });
         
         // Wait for comment box to appear
         const commentBox = await uiService.waitForElement(SELECTORS.COMMENT_BOX);

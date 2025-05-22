@@ -10,7 +10,7 @@ export const STORAGE_KEYS = {
   CUSTOM_PROMPT: "customPrompt",
 };
 
-class StorageHandler {
+class StorageService {
   /**
    * Get data from Chrome storage
    * @param {string|Array<string>} keys - Keys to retrieve
@@ -56,4 +56,4 @@ class StorageHandler {
   }
 }
 
-export default StorageHandler;
+export default StorageService;
