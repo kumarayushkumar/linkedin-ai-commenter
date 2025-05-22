@@ -79,8 +79,19 @@
     async function handleCommentClick(event) {
       try {
         // Check if extension is active
-        const result = await storageService.get(STORAGE_KEYS.EXTENSION_ACTIVE);
-        const isActive = result[STORAGE_KEYS.EXTENSION_ACTIVE] !== false;
+        let isActive = true;
+        try {
+          const result = await storageService.get(STORAGE_KEYS.EXTENSION_ACTIVE);
+          isActive = result[STORAGE_KEYS.EXTENSION_ACTIVE] !== false;
+        } catch (storageError) {
+          if (storageError.message && 
+              (storageError.message.includes('Extension context invalidated') || 
+               storageError.message.includes('Storage get error'))) {
+            uiService.showNotification('Extension was updated or reloaded. Please refresh the page.', 'warning');
+            return;
+          }
+        }
+        
         if (!isActive) return;
         
         // Find post element and extract text
@@ -88,41 +99,20 @@
         const postText = extractPostText(postElement);
         
         // Save post text for side panel
-        await storageService.set({ [STORAGE_KEYS.LAST_POST_TEXT]: postText });
-        
-        // Wait for comment box to appear
-        const commentBox = await uiService.waitForElement(SELECTORS.COMMENT_BOX);
-        const editorContainer = commentBox?.querySelector('.editor-container') || commentBox;
-        const commentInput = await uiService.waitForElement(SELECTORS.COMMENT_INPUT, editorContainer);
-        
-        // Show loading indicator
-        const loadingIndicator = uiService.createLoadingIndicator('Generating comment');
-        commentBox.appendChild(loadingIndicator);
-        
-        // Get custom prompt from storage
-        const customPrompt = await storageService.get(STORAGE_KEYS.CUSTOM_PROMPT);
-        
         try {
-          // Generate comment with OpenAI
-          const gptComment = await openAIService.generateComment(postText, customPrompt, {
-            model: AI_SETTINGS.MODEL,
-            temperature: AI_SETTINGS.TEMPERATURE,
-            maxTokens: AI_SETTINGS.MAX_TOKENS
-          });
+          await storageService.set({ [STORAGE_KEYS.LAST_POST_TEXT]: postText });
           
-          // Remove loading indicator
-          loadingIndicator.remove();
+          // Show notification that variants are ready in side panel
+          uiService.showNotification('Post saved! Check side panel for comment variants.', 'info');
           
-          // Insert comment into input field
-          uiService.insertTextIntoElement(commentInput, gptComment);
-          uiService.showNotification('Comment generated successfully!', 'success');
-        } catch (error) {
-          // Remove loading indicator
-          loadingIndicator.remove();
-          
-          console.error('Failed to generate comment:', error);
-          uiService.showNotification(error.userMessage || 'Failed to generate comment. Check API key.', 'error');
+          // Optionally open the side panel automatically
+          chrome.runtime.sendMessage({ action: "openSidePanel" });
+        } catch (saveError) {
+          console.error('Failed to save post text:', saveError);
+          uiService.showNotification('Error saving post text. Try again.', 'error');
         }
+        
+        // No longer generate or insert comment automatically
       } catch (error) {
         console.error('Comment handling error:', error);
         uiService.showNotification('Error handling comment button click', 'error');
@@ -150,12 +140,26 @@
     document.head.appendChild(style);
   }
   
-  // Initialize when the page is ready
-  function initialize() {
+  // After loading dependencies, check if extension context is valid
+  async function initialize() {
     addStyles();
-    loadDependencies().catch(error => {
-      console.error('Failed to load dependencies:', error);
-    });
+    try {
+      await loadDependencies();
+      
+      // Check storage accessibility
+      const storageAccessible = await storageService.isAccessible();
+      if (!storageAccessible) {
+        console.warn('Extension context invalidated. Page refresh required.');
+        return; // Stop initialization
+      }
+      
+      // Now that dependencies are loaded and storage is accessible, initialize the extension
+      const SELECTORS = constants.LINKEDIN_SELECTORS;
+      const AI_SETTINGS = constants.AI_SETTINGS;
+      initLinkedInAutoCommenter(SELECTORS, AI_SETTINGS, helpers);
+    } catch (error) {
+      console.error('Failed to initialize extension:', error);
+    }
   }
   
   if (document.readyState === 'loading') {

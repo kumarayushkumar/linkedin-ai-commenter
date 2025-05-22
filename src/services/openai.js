@@ -59,6 +59,7 @@ class OpenAIService {
         result = data.choices.map(choice => choice.message?.content?.trim() || '');
       }
       
+      console.log('Generated comment:', result);
       return result;
     } catch (error) {
       console.error('OpenAI API Error:', error);

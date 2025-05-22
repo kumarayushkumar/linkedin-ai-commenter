@@ -31,6 +31,14 @@ class SidePanelUI {
     
     // Load OpenAI service
     this.loadOpenAIService();
+    
+    // Listen for storage changes to detect when post text is saved
+    chrome.storage.onChanged.addListener((changes) => {
+      if (changes[STORAGE_KEYS.LAST_POST_TEXT]) {
+        // Auto-switch to response tab when post text is saved
+        this.switchToResponseTab();
+      }
+    });
   }
   
   // Dynamically load the OpenAI service
@@ -210,6 +218,17 @@ class SidePanelUI {
     }
     
     this.activeToggle.checked = result[STORAGE_KEYS.EXTENSION_ACTIVE] !== false;
+  }
+  
+  /**
+   * Switch to the response tab and load variants
+   */
+  switchToResponseTab() {
+    this.responseTab.classList.add('active');
+    this.settingsTab.classList.remove('active');
+    this.responseContent.style.display = '';
+    this.settingsContent.style.display = 'none';
+    this.fetchVariants();
   }
 }
 

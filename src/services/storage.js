@@ -54,6 +54,23 @@ class StorageService {
       }
     });
   }
+
+  /**
+   * Check if storage is accessible
+   * @returns {Promise<boolean>} - Whether storage is accessible
+   */
+  static async isAccessible() {
+    try {
+      await this.get('test');
+      return true;
+    } catch (error) {
+      if (error.message && error.message.includes('Extension context invalidated')) {
+        return false;
+      }
+      // Other errors might be temporary, so we'll assume storage is still accessible
+      return true;
+    }
+  }
 }
 
 export default StorageService;

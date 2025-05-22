@@ -5,9 +5,9 @@
  * These control the behavior of the OpenAI API requests
  */
 export const AI_SETTINGS = {
-  MODEL: "gpt-4o",
-  TEMPERATURE: 0.7,
-  MAX_TOKENS: 60
+  MODEL: "gpt-4.1",
+  TEMPERATURE: 0.2,
+  MAX_TOKENS: 100
 };
 
 /**
