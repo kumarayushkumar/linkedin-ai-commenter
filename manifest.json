@@ -2,14 +2,31 @@
   "manifest_version": 3,
   "name": "LinkedIn Auto Commenter",
   "version": "1.0",
-  "description": "Automatically comments 'nice post' on LinkedIn posts",
+  "description": "Write comments on LinkedIn posts automatically.",
   "permissions": [
     "activeTab",
     "scripting",
-    "storage"
+    "storage",
+    "notifications",
+    "sidePanel"
   ],
+  "side_panel": {
+    "default_path": "src/sidepanel/sidepanel.html"
+  },
   "action": {
-    "default_popup": "src/popup/popup.html"
+    "default_title": "Open LinkedIn Auto Commenter Side Panel",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   },
   "content_scripts": [
     {
@@ -19,5 +36,16 @@
   ],
   "background": {
     "service_worker": "src/background.js"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self';"
+  },
+  "commands": {
+    "show-side-panel": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y"
+      },
+      "description": "Show LinkedIn Auto Commenter Side Panel"
+    }
   }
 }

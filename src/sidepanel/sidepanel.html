@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>LinkedIn Auto Commenter - Side Panel</title>
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <div class="tab-container">
+      <div class="tabs">
+        <button class="tab" id="responseTab">Comment</button>
+        <button class="tab active" id="settingsTab">Settings</button>
+      </div>
+      <div class="tab-content" id="settingsContent">
+        <div class="toggle-container">
+          <label for="activeToggle">Enable Extension</label>  
+          <input type="checkbox" id="activeToggle" />
+        </div>
+        <div>
+          <label for="customPrompt">Instructions:</label>
+          <textarea id="customPrompt" rows="4" ></textarea>
+          <button id="savePrompt">Save Prompt</button>
+        </div>
+        <div class="status" id="status"></div>
+      </div>
+      <div class="tab-content" id="responseContent" style="display: none">
+        <div id="gptResponses">
+          <div class="response-variant" data-idx="0">Loading...</div>
+          <div class="response-variant" data-idx="1"></div>
+          <div class="response-variant" data-idx="2"></div>
+        </div>
+        <div class="status" id="responseStatus"></div>
+      </div>
+    </div>
+    <script src="sidepanel.js" type="module"></script>
+  </body>
+</html>

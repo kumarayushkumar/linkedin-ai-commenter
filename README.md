@@ -1,1 +1,1 @@
-# LinkedIn Auto Comment Extension
+# LinkedIn Auto Commenter

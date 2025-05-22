@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Side Panel</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      height: 100vh;
+    }
+    iframe {
+      width: 350px;
+      height: 100%;
+      border: none;
+      border-right: 1px solid #ccc;
+    }
+    .content {
+      flex: 1;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+  </style>
+</head>
+<body>
+  <iframe src="src/sidepanel/sidepanel.html"></iframe>
+  <div class="content">
+    <h2>LinkedIn Post Content Area</h2>
+    <p>This is where you would see LinkedIn content. The sidebar on the left is your extension's side panel.</p>
+    <p>Make changes to your UI files and simply refresh this page to see the updates.</p>
+  </div>
+</body>
+</html>
