@@ -104,3 +104,17 @@ export function formatErrorMessage(error) {
   
   return `Error: ${error.message}`;
 }
+
+/**
+ * Create a mutation observer with debounced callback
+ * @param {Element} target - Element to observe
+ * @param {Function} callback - Callback function
+ * @param {Object} options - Observer options
+ * @param {number} debounceTime - Debounce time in ms
+ * @returns {MutationObserver} - The created observer
+ */
+export function createObserver(target, callback, options = { subtree: true, childList: true }, debounceTime = 100) {
+  const observer = new MutationObserver(debounce(callback, debounceTime));
+  observer.observe(target, options);
+  return observer;
+}

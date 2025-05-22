@@ -17,9 +17,13 @@
           <input type="checkbox" id="activeToggle" />
         </div>
         <div>
-          <label for="customPrompt">Instructions:</label>
-          <textarea id="customPrompt" rows="4" ></textarea>
-          <button id="savePrompt">Save Prompt</button>
+          <label for="customPrompt">Instrudctions:</label>
+          <p class="prompt-note">This is the default prompt. You can customize it to control how the AI generates comments.</p>
+          <textarea id="customPrompt" rows="8" ></textarea>
+          <div class="button-group">
+            <button id="savePrompt">Save Prompt</button>
+            <button id="resetPrompt">Reset to Default</button>
+          </div>
         </div>
         <div class="status" id="status"></div>
       </div>

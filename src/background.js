@@ -1,16 +1,9 @@
 // LinkedIn Auto Commenter - Background Script
 // Handles extension initialization and side panel management
 
-/**
- * Check if a Chrome API feature is available
- * @param {string} apiPath - Dot-notation path to the API
- * @returns {boolean} - Whether the API is available
- */
-function isApiAvailable(apiPath) {
-  return apiPath.split('.').reduce((obj, path) => {
-    return (obj && obj[path]) ? obj[path] : undefined;
-  }, chrome) !== undefined;
-}
+import { STORAGE_KEYS } from './services/storage.js';
+import { DEFAULT_PROMPT } from './utils/constants.js';
+import { isApiAvailable } from './utils/helpers.js';
 
 /**
  * Open the side panel for a tab
@@ -55,15 +48,45 @@ function notifyUser(title, message) {
   }
 }
 
+// Initialize storage with default values
+async function initializeStorage() {
+  try {
+    // Check if Chrome storage API is available
+    if (!isApiAvailable('storage.sync')) {
+      console.error('Chrome storage API is not available');
+      return;
+    }
+
+    // Import the storage service
+    const { default: StorageHandler } = await import('./services/storage.js');
+    
+    // Initialize with default values
+    await StorageHandler.set({
+      [STORAGE_KEYS.EXTENSION_ACTIVE]: true,
+      [STORAGE_KEYS.DEFAULT_PROMPT]: DEFAULT_PROMPT
+    });
+    
+    console.log('Storage initialized with default values');
+  } catch (error) {
+    console.error('Failed to initialize storage:', error);
+  }
+}
+
 // Handle extension installation
 chrome.runtime.onInstalled.addListener(() => {
   console.log('LinkedIn Auto Commenter extension installed');
+  initializeStorage(); // Initialize storage on first install
 });
 
 // Handle messages from content script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "openSidePanel") {
     openSidePanel(sender.tab.id);
+  } else if (message.action === "getDefaultPrompt") {
+    // Send the default prompt from constants
+    sendResponse({ 
+      defaultPrompt: DEFAULT_PROMPT 
+    });
   }
   return true; // Keep the messaging channel open for async responses
 });

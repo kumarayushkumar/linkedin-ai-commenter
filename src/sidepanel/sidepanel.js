@@ -1,7 +1,7 @@
 // LinkedIn Auto Commenter - Side Panel Script
 // Handles side panel UI and interactions
 
-import StorageHandler from '../services/storage.js';
+import StorageHandler, { STORAGE_KEYS } from '../services/storage.js';
 
 /**
  * UI handler for the side panel
@@ -16,7 +16,6 @@ class SidePanelUI {
     
     // Settings elements
     this.promptInput = document.getElementById('customPrompt');
-    this.saveBtn = document.getElementById('savePrompt');
     this.status = document.getElementById('status');
     this.activeToggle = document.getElementById('activeToggle');
     
@@ -28,6 +27,21 @@ class SidePanelUI {
     this.initTabSwitching();
     this.initSettingsHandlers();
     this.loadSettings();
+    this.initResponseHandlers();
+    
+    // Load OpenAI service
+    this.loadOpenAIService();
+  }
+  
+  // Dynamically load the OpenAI service
+  async loadOpenAIService() {
+    try {
+      const baseURL = chrome.runtime.getURL('src/');
+      const openAIModule = await import(baseURL + 'services/openai.js');
+      this.openAIService = openAIModule.default;
+    } catch (error) {
+      console.error('Failed to load OpenAI service:', error);
+    }
   }
   
   // Set up tab switching behavior
@@ -48,113 +62,154 @@ class SidePanelUI {
     });
   }
   
-  // Set up settings tab handlers
-  initSettingsHandlers() {
-    this.saveBtn.addEventListener('click', async () => {
-      await StorageHandler.set({ 
-        customPrompt: this.promptInput.value,
-        extensionActive: this.activeToggle.checked
+  // Set up response tab handlers for copying
+  initResponseHandlers() {
+    this.gptResponses.addEventListener('click', (e) => {
+      const variant = e.target.closest('.response-variant');
+      if (variant && variant.textContent !== 'Loading...') {
+        const text = variant.textContent;
+        navigator.clipboard.writeText(text)
+          .then(() => {
+            this.responseStatus.textContent = 'Comment copied to clipboard!';
+            setTimeout(() => this.responseStatus.textContent = '', 3000);
+          })
+          .catch(err => {
+            console.error('Failed to copy text:', err);
+            this.responseStatus.textContent = 'Failed to copy comment';
+            setTimeout(() => this.responseStatus.textContent = '', 3000);
+          });
+      }
+    });
+  }
+  
+  // Fetch comment variants from OpenAI
+  async fetchVariants() {
+    // Set all variants to loading state
+    const variants = this.gptResponses.querySelectorAll('.response-variant');
+    variants.forEach(variant => {
+      variant.textContent = 'Loading...';
+    });
+    
+    try {
+      // Make sure OpenAI service is loaded
+      if (!this.openAIService) {
+        await this.loadOpenAIService();
+        if (!this.openAIService) {
+          throw new Error('OpenAI service not available');
+        }
+      }
+      
+      // Get the last post text from storage
+      const result = await StorageHandler.get([STORAGE_KEYS.LAST_POST_TEXT]);
+      const postText = result[STORAGE_KEYS.LAST_POST_TEXT];
+      
+      if (!postText) {
+        variants.forEach(variant => {
+          variant.textContent = 'No post selected. Click on a LinkedIn post comment button first.';
+        });
+        return;
+      }
+      
+      // Get custom prompt from storage
+      const customPrompt = await StorageHandler.get(STORAGE_KEYS.CUSTOM_PROMPT);
+      
+      // Generate 3 comment variants
+      const comments = await this.openAIService.generateComment(postText, customPrompt, {
+        n: 3
       });
       
+      // Parse the response - it might return as a single string with separators
+      let commentArray = [];
+      if (Array.isArray(comments)) {
+        commentArray = comments;
+      } else if (typeof comments === 'string') {
+        // Split by "---" if the API returned all variants in one string
+        commentArray = comments.split(/\s*---\s*/g).filter(c => c.trim());
+      }
+      
+      // Update variants with comments
+      variants.forEach((variant, index) => {
+        if (commentArray[index]) {
+          variant.textContent = commentArray[index];
+        } else {
+          variant.textContent = 'No comment variant generated';
+        }
+      });
+      
+    } catch (error) {
+      console.error('Failed to fetch variants:', error);
+      this.responseStatus.textContent = error.userMessage || 'Failed to generate comments';
+      
+      variants.forEach(variant => {
+        variant.textContent = 'Error generating comment variants';
+      });
+    }
+  }
+  
+  // Set up settings tab handlers
+  initSettingsHandlers() {
+    this.saveBtn = document.getElementById('savePrompt');
+    this.resetBtn = document.getElementById('resetPrompt');
+    
+    this.saveBtn.addEventListener('click', async () => {
+      const promptNote = document.querySelector('.prompt-note');
+      
+      await StorageHandler.set({ 
+        [STORAGE_KEYS.CUSTOM_PROMPT]: this.promptInput.value,
+        [STORAGE_KEYS.EXTENSION_ACTIVE]: this.activeToggle.checked
+      });
+      
+      // Update the prompt note to indicate we're using a custom prompt
+      promptNote.textContent = "You're using a custom prompt. You can reset to the default using the button below.";
+      
       this.status.textContent = 'Settings saved!';
-      setTimeout(() => this.status.textContent = '', 1500);
+      setTimeout(() => this.status.textContent = '', 3000);
+    });
+    
+    this.resetBtn.addEventListener('click', async () => {
+      const promptNote = document.querySelector('.prompt-note');
+      
+      // Get the default prompt from background script
+      chrome.runtime.sendMessage({ action: 'getDefaultPrompt' }, async (response) => {
+        if (response && response.defaultPrompt) {
+          this.promptInput.value = response.defaultPrompt;
+          
+          // Clear the custom prompt from storage
+          await StorageHandler.set({ [STORAGE_KEYS.CUSTOM_PROMPT]: '' });
+          
+          // Update the prompt note to indicate we're using the default prompt
+          promptNote.textContent = "This is the default prompt. You can customize it to control how the AI generates comments.";
+          
+          this.status.textContent = 'Prompt reset to default!';
+          setTimeout(() => this.status.textContent = '', 3000);
+        }
+      });
     });
     
     this.activeToggle.addEventListener('change', async () => {
-      await StorageHandler.set({ extensionActive: this.activeToggle.checked });
+      await StorageHandler.set({ [STORAGE_KEYS.EXTENSION_ACTIVE]: this.activeToggle.checked });
     });
   }
   
   // Load settings from storage
   async loadSettings() {
-    const result = await StorageHandler.get(['customPrompt', 'extensionActive']);
+    const result = await StorageHandler.get([STORAGE_KEYS.CUSTOM_PROMPT, STORAGE_KEYS.EXTENSION_ACTIVE]);
+    const promptNote = document.querySelector('.prompt-note');
     
-    if (result.customPrompt) {
-      this.promptInput.value = result.customPrompt;
-    }
-    
-    this.activeToggle.checked = result.extensionActive !== false;
-  }
-  
-  // Fetch comment variants from OpenAI
-  async fetchVariants() {
-    // Reset UI state
-    this.gptResponses.querySelectorAll('.response-variant').forEach(el => {
-      el.textContent = 'Loading...';
-      el.onclick = null;
-    });
-    
-    this.responseStatus.textContent = '';
-    
-    try {
-      // Get data from storage
-      const result = await StorageHandler.get(['customPrompt', 'lastPostText']);
-      const prompt = result.customPrompt || 'Write a relevant comment for this post:';
-      const postText = result.lastPostText || 'Sample LinkedIn post.';
-      
-      // Get API key and generate variants
-      const apiKey = typeof OPENAI_API_KEY !== 'undefined' ? OPENAI_API_KEY : '';
-      const completions = await this.generateCommentVariants(apiKey, postText, prompt);
-      
-      // Update UI with results
-      this.gptResponses.querySelectorAll('.response-variant').forEach((el, idx) => {
-        el.textContent = completions[idx] || '';
-        el.onclick = () => this.copyToClipboard(el.textContent);
+    // If user has a custom prompt saved, use that
+    if (result[STORAGE_KEYS.CUSTOM_PROMPT]) {
+      this.promptInput.value = result[STORAGE_KEYS.CUSTOM_PROMPT];
+      promptNote.textContent = "You're using a custom prompt. You can reset to the default using the button below.";
+    } else {
+      chrome.runtime.sendMessage({ action: 'getDefaultPrompt' }, (response) => {
+        if (response && response.defaultPrompt) {
+          this.promptInput.value = response.defaultPrompt;
+          promptNote.textContent = "This is the default prompt. You can customize it to control how the AI generates comments.";
+        }
       });
-    } catch (error) {
-      console.error('Error fetching variants:', error);
-      this.gptResponses.querySelectorAll('.response-variant').forEach(el => {
-        el.textContent = 'Error loading response.';
-      });
-      this.responseStatus.textContent = `Failed: ${error.message || 'Unknown error'}`;
-    }
-  }
-  
-  // Copy text to clipboard and show confirmation
-  copyToClipboard(text) {
-    navigator.clipboard.writeText(text);
-    this.responseStatus.textContent = 'Copied to clipboard!';
-    setTimeout(() => this.responseStatus.textContent = '', 1200);
-  }
-  
-  // Generate comment variants using OpenAI
-  async generateCommentVariants(apiKey, postText, prompt) {
-    if (!apiKey || apiKey === "sk-...your-key-here...") {
-      return [
-        "Please set your OpenAI API key in config.js",
-        "You need a valid API key to generate comments",
-        "Update the OPENAI_API_KEY constant in your config.js file"
-      ];
     }
     
-    try {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o',
-          messages: [{ role: 'user', content: `${postText}\n\n---\n${prompt}` }],
-          n: 3,
-          max_tokens: 60,
-          temperature: 0.7,
-        }),
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        console.error('OpenAI API error:', error);
-        throw new Error(error.error?.message || 'API Error');
-      }
-      
-      const data = await response.json();
-      return (data.choices || []).map(choice => choice.message.content.trim());
-    } catch (error) {
-      console.error('Error calling OpenAI API:', error);
-      throw error;
-    }
+    this.activeToggle.checked = result[STORAGE_KEYS.EXTENSION_ACTIVE] !== false;
   }
 }
 

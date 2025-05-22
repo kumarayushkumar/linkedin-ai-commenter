@@ -1,32 +1,10 @@
 // API service for handling OpenAI requests
+import { OPENAI_API_KEY } from '../config.js';
+import { AI_SETTINGS } from '../utils/constants.js';
+
 class OpenAIService {
   constructor() {
-    this.apiKey = typeof OPENAI_API_KEY !== 'undefined' ? OPENAI_API_KEY : '';
-    this.responseCache = new Map(); // Cache for API responses
-  }
-
-  /**
-   * Get API key from storage if available
-   * @returns {Promise<string>} API key
-   */
-  async getApiKey() {
-    // First try to get from storage
-    if (chrome && chrome.storage) {
-      try {
-        const result = await new Promise(resolve => {
-          chrome.storage.local.get(['openaiApiKey'], result => resolve(result));
-        });
-        
-        if (result.openaiApiKey) {
-          return result.openaiApiKey;
-        }
-      } catch (e) {
-        console.warn('Failed to get API key from storage:', e);
-      }
-    }
-    
-    // Fall back to config.js key
-    return this.apiKey;
+    this.apiKey = OPENAI_API_KEY;
   }
 
   /**
@@ -38,22 +16,18 @@ class OpenAIService {
    */
   async generateComment(postText, prompt, options = {}) {
     try {
-      const { model = 'gpt-4o', temperature = 0.7, maxTokens = 60, n = 1 } = options;
+      const { 
+        model = AI_SETTINGS.MODEL, 
+        temperature = AI_SETTINGS.TEMPERATURE, 
+        maxTokens = AI_SETTINGS.MAX_TOKENS, 
+        n = 1 
+      } = options;
       
       // Try to get API key from storage first
-      const apiKey = await this.getApiKey();
+      const apiKey = OPENAI_API_KEY
       
       if (!apiKey || apiKey === "sk-...your-key-here...") {
         throw new Error('API key not configured');
-      }
-      
-      // Create a cache key based on post text, prompt and options
-      const cacheKey = `${postText}-${prompt}-${model}-${temperature}-${maxTokens}-${n}`;
-      
-      // Check if we have a cached response
-      if (this.responseCache.has(cacheKey)) {
-        console.log('Using cached response for:', cacheKey.substring(0, 30) + '...');
-        return this.responseCache.get(cacheKey);
       }
       
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -85,15 +59,6 @@ class OpenAIService {
         result = data.choices.map(choice => choice.message?.content?.trim() || '');
       }
       
-      // Cache the result
-      this.responseCache.set(cacheKey, result);
-      
-      // Limit cache size to prevent memory issues
-      if (this.responseCache.size > 50) {
-        const firstKey = this.responseCache.keys().next().value;
-        this.responseCache.delete(firstKey);
-      }
-      
       return result;
     } catch (error) {
       console.error('OpenAI API Error:', error);
@@ -111,14 +76,6 @@ class OpenAIService {
       
       throw error;
     }
-  }
-  
-  /**
-   * Clear the response cache
-   */
-  clearCache() {
-    this.responseCache.clear();
-    console.log('OpenAI response cache cleared');
   }
 }
 

@@ -31,11 +31,13 @@
   "content_scripts": [
     {
       "matches": ["*://*.linkedin.com/*"],
-      "js": ["src/config.js", "src/content.js"]
+      "js": ["src/content.js"],
+      "type": "module"
     }
   ],
   "background": {
-    "service_worker": "src/background.js"
+    "service_worker": "src/background.js",
+    "type": "module"
   },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self';"
@@ -47,5 +49,18 @@
       },
       "description": "Show LinkedIn Auto Commenter Side Panel"
     }
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/config.js",
+        "src/services/openai.js",
+        "src/services/storage.js",
+        "src/services/ui.js",
+        "src/utils/helpers.js",
+        "src/utils/constants.js"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

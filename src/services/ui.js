@@ -193,6 +193,20 @@ class UIService {
     document.execCommand('insertText', false, text);
     element.dispatchEvent(new Event('input', { bubbles: true }));
   }
+  
+  /**
+   * Create a loading indicator
+   * @param {string} text - Text to display
+   * @returns {HTMLElement} The loading indicator element
+   */
+  createLoadingIndicator(text = 'Loading...') {
+    const loadingIndicator = document.createElement('div');
+    loadingIndicator.classList.add('lai-loading');
+    loadingIndicator.innerHTML = `<span style="margin-right: 5px;">${text}</span>`;
+    loadingIndicator.appendChild(document.createElement('div')).classList.add('lai-spinner');
+    loadingIndicator.style.cssText = 'display: flex; align-items: center; margin: 5px 0; font-style: italic; color: #666;';
+    return loadingIndicator;
+  }
 }
 
 // Export as singleton

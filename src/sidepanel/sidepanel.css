@@ -30,7 +30,6 @@ body {
 
 label {
   display: block;
-  margin-bottom: 8px;
   font-weight: 500;
 }
 
@@ -40,7 +39,7 @@ textarea {
   border: 1px solid var(--border-color);
   font-family: var(--font-family);
   resize: vertical;
-  margin-bottom: 12px;
+  margin-bottom: 0.5rem;
   transition: border-color 0.2s;
   min-height: 200px;
 }
@@ -49,6 +48,22 @@ textarea:focus {
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 2px rgba(10, 102, 194, 0.1);
+}
+
+.button-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.button-group button {
+  flex: 1;
+}
+
+.prompt-note {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+  font-style: italic;
 }
 
 button {
@@ -131,12 +146,55 @@ button:hover {
   margin-bottom: 0;
 }
 
+/* Style the checkbox as a toggle switch */
+#activeToggle {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 50px;
+  height: 24px;
+  background-color: #ccc;
+  border-radius: 24px;
+  position: relative;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.3s;
+}
+
+#activeToggle:checked {
+  background-color: var(--secondary-color);
+}
+
+#activeToggle:before {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 100%;
+  top: 2px;
+  left: 2px;
+  background-color: white;
+  transition: transform 0.3s;
+}
+
+#activeToggle:checked:before {
+  transform: translateX(26px);
+}
+
 .status {
   margin-top: 12px;
-  padding: 8px 0;
+  padding: 8px 12px;
   color: var(--secondary-color);
   font-size: 14px;
   font-weight: 500;
+  background-color: #f5f9f7;
+  border-left: 3px solid var(--secondary-color);
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.status:not(:empty) {
+  opacity: 1;
 }
 
 #gptResponses {
@@ -173,40 +231,6 @@ button:hover {
 
 .response-variant:hover::after {
   opacity: 1;
-}
-
-/* Toggle switch styling */
-input[type="checkbox"] {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 42px;
-  height: 26px;
-  background: #ccc;
-  display: inline-block;
-  border-radius: 100px;
-  position: relative;
-  margin: 0;
-  cursor: pointer;
-}
-
-input[type="checkbox"]::after {
-  content: "";
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 20px;
-  height: 20px;
-  background: var(--white);
-  border-radius: 90px;
-  transition: 0.3s;
-}
-
-input[type="checkbox"]:checked {
-  background: var(--secondary-color);
-}
-
-input[type="checkbox"]:checked::after {
-  left: calc(100% - 23px);
 }
 
 @media (max-width: 420px) {
