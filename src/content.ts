@@ -11,7 +11,6 @@ declare global {
 }
 
 (function() {
-  // Initialize the extension
   function initLinkedInAutoCommenter() {
     // Track URL changes to reinitialize on navigation
     let lastUrl = location.href;
@@ -75,18 +74,14 @@ declare global {
         const postElement = this.closest(LINKEDIN_SELECTORS.POST_CONTAINER);
         const postText = extractPostText(postElement as HTMLElement);
         
-        // Save post text for side panel
         try {
           await StorageService.set({ [STORAGE_KEYS.LAST_POST_TEXT]: postText });
           
-          // Show notification that variants are ready in side panel
-          uiService.showNotification('Post saved! Check side panel for comment variants.', 'info');
+          uiService.showNotification('Check side panel for comments', 'info');
           
-          // Optionally open the side panel automatically
           chrome.runtime.sendMessage({ action: "openSidePanel" }, (response) => {
             if (chrome.runtime.lastError) {
               const errorMessage = chrome.runtime.lastError.message || 'Unknown error';
-              console.error('Failed to open side panel:', errorMessage);
               // Show a more user-friendly message for connection errors
               const userMessage = errorMessage.includes('establish connection') 
                 ? 'Extension needs to be reloaded. Please refresh the page or restart Chrome.'
@@ -95,53 +90,27 @@ declare global {
             }
           });
         } catch (saveError: any) {
-          console.error('Failed to save post text:', saveError);
           uiService.showNotification('Error saving post text. Try again.', 'error');
         }
         
       } catch (error: any) {
-        console.error('Comment handling error:', error);
         uiService.showNotification('Error handling comment button click', 'error');
       }
     }
   }
   
-  // Add CSS styles for the extension
-  function addStyles() {
-    const style = document.createElement('style');
-    style.textContent = `
-      .lai-spinner {
-        width: 16px;
-        height: 16px;
-        border: 2px solid rgba(0, 0, 0, 0.1);
-        border-top-color: #0a66c2;
-        border-radius: 50%;
-        animation: lai-spin 1s linear infinite;
-      }
-      
-      @keyframes lai-spin {
-        to { transform: rotate(360deg); }
-      }
-    `;
-    document.head.appendChild(style);
-  }
-  
-  // After loading dependencies, check if extension context is valid
   async function initialize() {
-    addStyles();
     try {
-      
-      // Check storage accessibility
       const storageAccessible = await StorageService.isAccessible();
       if (!storageAccessible) {
-        console.warn('Extension context invalidated. Page refresh required.');
-        return; // Stop initialization
+        uiService.showNotification('Storage is not accessible. Please check permissions.', 'error');
+        return;
       }
       
       // Now that dependencies are loaded and storage is accessible, initialize the extension
       initLinkedInAutoCommenter();
     } catch (error) {
-      console.error('Failed to initialize extension:', error);
+      uiService.showNotification('Failed to initialize extension. Please refresh the page.', 'error');
     }
   }
   

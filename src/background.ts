@@ -1,9 +1,9 @@
 // LinkedIn Auto Commenter - Background Script
 // Handles extension initialization and side panel management
 
-import StorageService, { STORAGE_KEYS } from './services/storage';
-import { PROMP_TEMPLATE } from './utils/constants';
-import { isApiAvailable } from './utils/helpers';
+import StorageService, { STORAGE_KEYS } from "./services/storage";
+import { DEFAULT_TEMPLATE } from "./utils/constants";
+import { isApiAvailable } from "./utils/helpers";
 
 /**
  * Open the side panel for a tab
@@ -11,22 +11,24 @@ import { isApiAvailable } from './utils/helpers';
  */
 function openSidePanel(tabId: number): void {
   // Check if side panel API is available
-  if (isApiAvailable('sidePanel.setOptions')) {
+  if (isApiAvailable("sidePanel.setOptions")) {
     // First set the options for the side panel
     chrome.sidePanel.setOptions({
       tabId: tabId,
       path: "sidepanel.html",
-      enabled: true
+      enabled: true,
     });
-    
+
     // Then open the side panel if that API is available
-    if (isApiAvailable('sidePanel.open')) {
+    if (isApiAvailable("sidePanel.open")) {
       // @ts-ignore - Chrome types are not up to date
       chrome.sidePanel.open({ tabId: tabId });
     }
   } else {
-    notifyUser('Side panel not available', 
-      'Side panel is not supported in this Chrome version. Please use Ctrl+Shift+Y to open it or update Chrome.');
+    notifyUser(
+      "Side panel not available",
+      "Side panel is not supported in this Chrome version. Please update Chrome."
+    );
   }
 }
 
@@ -36,15 +38,13 @@ function openSidePanel(tabId: number): void {
  * @param message - Notification message
  */
 function notifyUser(title: string, message: string): void {
-  console.warn(message);
-  
   // Check if notifications API is available
-  if (isApiAvailable('notifications.create')) {
+  if (isApiAvailable("notifications.create")) {
     chrome.notifications.create({
-      type: 'basic',
-      iconUrl: 'icons/icon48.png',
-      title: title || 'LinkedIn Auto Commenter',
-      message: message
+      type: "basic",
+      iconUrl: "icons/icon48.png",
+      title: title || "LinkedIn Auto Commenter",
+      message: message,
     });
   }
 }
@@ -53,53 +53,41 @@ function notifyUser(title: string, message: string): void {
 async function initializeStorage(): Promise<void> {
   try {
     // Check if Chrome storage API is available
-    if (!isApiAvailable('storage.sync')) {
-      console.error('Chrome storage API is not available');
+    if (!isApiAvailable("storage.sync")) {
       return;
     }
 
     // Initialize with default values
     await StorageService.set({
       [STORAGE_KEYS.EXTENSION_ACTIVE]: true,
-      [STORAGE_KEYS.PROMP_TEMPLATE]: PROMP_TEMPLATE
+      [STORAGE_KEYS.DEFAULT_TEMPLATE]: DEFAULT_TEMPLATE,
     });
-    
-    console.log('Storage initialized with default values');
-  } catch (error) {
-    console.error('Failed to initialize storage:', error);
-  }
+  } catch (error) {}
 }
-
-interface Message {
-  action: string;
-}
-
-// Handle extension installation
-chrome.runtime.onInstalled.addListener(() => {
-  console.log('LinkedIn Auto Commenter extension installed');
-  initializeStorage(); // Initialize storage on first install
-});
 
 // Handle messages from content script
-chrome.runtime.onMessage.addListener((message: Message, sender, sendResponse) => {
-  try {
-    if (message.action === "openSidePanel" && sender.tab?.id) {
-      openSidePanel(sender.tab.id);
-      sendResponse({ success: true });
-    } else if (message.action === "getDefaultPrompt") {
-      // Send the default prompt from constants
-      sendResponse({ 
-        defaultPrompt: PROMP_TEMPLATE 
-      });
+chrome.runtime.onMessage.addListener(
+  (message: { action: string }, sender, sendResponse) => {
+    try {
+      if (message.action === "openSidePanel" && sender.tab?.id) {
+        openSidePanel(sender.tab.id);
+        sendResponse({ success: true });
+      } else if (message.action === "getDefaultPrompt") {
+        sendResponse({
+          defaultPrompt: DEFAULT_TEMPLATE,
+        });
+      }
+    } catch (error: any) {
+      sendResponse({ error: error.message });
     }
-  } catch (error: any) {
-    console.error('Error handling message:', error);
-    sendResponse({ error: error.message });
+    return true;
   }
-  return true; // Keep the messaging channel open for async responses
+);
+
+chrome.runtime.onInstalled.addListener(() => {
+  initializeStorage();
 });
 
-// Handle extension icon click
 chrome.action.onClicked.addListener((tab) => {
   if (tab.id) {
     openSidePanel(tab.id);

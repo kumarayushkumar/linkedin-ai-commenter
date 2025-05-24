@@ -4,7 +4,7 @@
 
 export interface StorageKeys {
   EXTENSION_ACTIVE: string;
-  PROMP_TEMPLATE: string;
+  DEFAULT_TEMPLATE: string;
   LAST_POST_TEXT: string;
   CUSTOM_PROMPT: string;
 }
@@ -12,7 +12,7 @@ export interface StorageKeys {
 // Define storage keys upfront for consistency and maintainability
 export const STORAGE_KEYS: StorageKeys = {
   EXTENSION_ACTIVE: "extensionActive",
-  PROMP_TEMPLATE: "defaultPrompt",
+  DEFAULT_TEMPLATE: "defaultPrompt",
   LAST_POST_TEXT: "lastPostText",
   CUSTOM_PROMPT: "customPrompt",
 };
@@ -73,7 +73,6 @@ class StorageService {
       if ((error as Error).message && (error as Error).message.includes('Extension context invalidated')) {
         return false;
       }
-      // Other errors might be temporary, so we'll assume storage is still accessible
       return true;
     }
   }

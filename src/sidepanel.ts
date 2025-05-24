@@ -12,29 +12,26 @@ class SidePanelUI {
   private elements: Partial<SidePanelElements>;
 
   constructor() {
-    // Initialize elements
     this.elements = {
-      // Tab elements
-      settingsTab: document.getElementById("settingsTab") || undefined,
-      responseTab: document.getElementById("responseTab") || undefined,
-      settingsContent: document.getElementById("settingsContent") || undefined,
-      responseContent: document.getElementById("responseContent") || undefined,
+      settingsTab: document.getElementById("settingsTab") ?? undefined,
+      responseTab: document.getElementById("responseTab") ?? undefined,
+      settingsContent: document.getElementById("settingsContent") ?? undefined,
+      responseContent: document.getElementById("responseContent") ?? undefined,
 
-      // Settings elements
       promptInput:
-        (document.getElementById("customPrompt") as HTMLTextAreaElement) ||
+        (document.getElementById("customPrompt") as HTMLTextAreaElement) ??
         undefined,
-      status: document.getElementById("status") || undefined,
+      status: document.getElementById("status") ?? undefined,
       activeToggle:
-        (document.getElementById("activeToggle") as HTMLInputElement) ||
+        (document.getElementById("activeToggle") as HTMLInputElement) ??
         undefined,
 
       // Response elements
-      gptResponses: document.getElementById("gptResponses") || undefined,
-      responseStatus: document.getElementById("responseStatus") || undefined,
+      gptResponses: document.getElementById("gptResponses") ?? undefined,
+      responseStatus: document.getElementById("responseStatus") ?? undefined,
     };
 
-    // Initialize UI
+    // Initialize UI 
     this.initTabSwitching();
     this.initSettingsHandlers();
     this.loadSettings();
@@ -100,7 +97,6 @@ class SidePanelUI {
             }
           })
           .catch((err) => {
-            console.error("Failed to copy text:", err);
             if (this.elements.responseStatus) {
               this.elements.responseStatus.textContent =
                 "Failed to copy comment";
@@ -169,7 +165,6 @@ class SidePanelUI {
         }
       });
     } catch (error: any) {
-      console.error("Failed to fetch variants:", error);
       if (this.elements.responseStatus) {
         this.elements.responseStatus.textContent =
           error.userMessage || "Failed to generate comments";

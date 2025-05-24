@@ -32,9 +32,7 @@ export class OpenAIService {
     prompt: string
   ): Promise<string | string[]> {
     try {
-      const apiKey = OPENAI_API_KEY;
-
-      if (!apiKey) {
+      if (!this.apiKey) {
         throw new Error("API key not configured");
       }
 
@@ -44,13 +42,13 @@ export class OpenAIService {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
+            Authorization: `Bearer ${this.apiKey}`,
           },
           body: JSON.stringify({
             model: AI_SETTINGS.MODEL,
             messages: [
               {
-                role: "developer",
+                role: "system", // FIXED: was "developer"
                 content:
                   "You are a content creator with 5 years of experience. And do not use Markdown",
               },
@@ -62,23 +60,16 @@ export class OpenAIService {
         }
       );
 
+      const data = await response.json();
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || "API Error");
+        throw new Error(data.error?.message || "API Error");
       }
 
-      const data = (await response.json()) as OpenAIResponse;
-      let result;
-
-      result = data.choices.map(
-        (choice) => choice.message?.content?.trim() || ""
+      let result = (data.choices || []).map(
+        (choice: { message: { content: string; }; }) => choice.message?.content?.trim() || ""
       );
-
-      console.log("Generated comment:", result);
       return result;
     } catch (error) {
-      console.error("OpenAI API Error:", error);
-
       const enhancedError = new Error(
         error instanceof Error ? error.message : 'Unknown error'
       ) as OpenAIError;
@@ -112,6 +103,5 @@ export class OpenAIService {
   }
 }
 
-// Export as singleton
 const openAIService = new OpenAIService();
 export default openAIService;
