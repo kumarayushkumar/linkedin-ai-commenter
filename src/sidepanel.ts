@@ -224,36 +224,54 @@ class SidePanelUI {
     this.elements.gptResponses.addEventListener("click", (event) => {
       const target = event.target as HTMLElement;
       if (target.classList.contains("response-variant") && target.textContent) {
-        // Mark the active LinkedIn post
-        const activePost = document.querySelector(".active-post");
-        if (activePost) {
-          activePost.classList.remove("active-post");
+        const commentText = target.textContent.trim();
+        
+        if (!commentText) {
+          this.showStatusMessage(this.elements.responseStatus, "Error: Empty comment");
+          return;
         }
-
-        const postElement = target.closest(".linkedin-post"); // Adjust selector to match LinkedIn post structure
-        if (postElement) {
-          postElement.classList.add("active-post");
+        
+        // Indicate that we're applying the comment
+        if (this.elements.responseStatus) {
+          this.elements.responseStatus.textContent = "Applying comment...";
         }
-
+        
         // Send message to content script to fill the comment box
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-          if (tabs[0].id) {
-            chrome.tabs.sendMessage(tabs[0].id, {
-              action: "fillCommentBox",
-              comment: target.textContent,
-            });
-
-            // Show feedback to user
-            if (this.elements.responseStatus) {
-              this.elements.responseStatus.textContent = "Comment applied to LinkedIn!";
-              setTimeout(() => {
-                if (this.elements.responseStatus) this.elements.responseStatus.textContent = "";
-              }, 3000);
-            }
+          if (!tabs[0]?.id) {
+            this.showStatusMessage(this.elements.responseStatus, "Error: No active tab found");
+            return;
           }
+          
+          chrome.tabs.sendMessage(
+            tabs[0].id, 
+            { action: "fillCommentBox", comment: commentText },
+            (response) => {
+              const lastError = chrome.runtime.lastError;
+              if (lastError) {
+                this.showStatusMessage(
+                  this.elements.responseStatus, 
+                  `Error: ${lastError.message}`
+                );
+                return;
+              }
+              
+              // Show success feedback to user
+              this.showStatusMessage(this.elements.responseStatus, "Comment applied to LinkedIn!");
+            }
+          );
         });
       }
     });
+  }
+
+  private showStatusMessage(element: HTMLElement | undefined, message: string, duration = 3000): void {
+    if (!element) return;
+    
+    element.textContent = message;
+    setTimeout(() => {
+      if (element) element.textContent = "";
+    }, duration);
   }
 
   // Load settings from storage
@@ -308,6 +326,12 @@ class SidePanelUI {
     this.elements.responseContent.style.display = "";
     this.elements.settingsContent.style.display = "none";
     this.fetchVariants();
+  }
+
+  private clearStatusAfterDelay(): void {
+    setTimeout(() => {
+      if (this.elements.responseStatus) this.elements.responseStatus.textContent = "";
+    }, 3000);
   }
 }
 
