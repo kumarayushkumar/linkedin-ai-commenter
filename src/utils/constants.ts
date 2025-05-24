@@ -5,8 +5,8 @@ import { AISettings, LinkedInSelectors } from "../types";
  * These control the behavior of the OpenAI API requests
  */
 export const AI_SETTINGS: AISettings = {
-  MODEL: "gpt-4o",
-  TEMPERATURE: 0.2,
+  MODEL: "gpt-4.1",
+  TEMPERATURE: 0.4,
   N: 3,
 };
 
