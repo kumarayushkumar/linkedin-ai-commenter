@@ -70,29 +70,41 @@ declare global {
         
         if (!isActive) return;
         
-        // Find post element and extract text
+        // Find post element and mark it as active
         const postElement = this.closest(LINKEDIN_SELECTORS.POST_CONTAINER);
-        const postText = extractPostText(postElement as HTMLElement);
-        
-        try {
-          await StorageService.set({ [STORAGE_KEYS.LAST_POST_TEXT]: postText });
-          
-          showNotification('Check side panel for comments', 'info');
-          
-          chrome.runtime.sendMessage({ action: "openSidePanel" }, (response) => {
-            if (chrome.runtime.lastError) {
-              const errorMessage = chrome.runtime.lastError.message || 'Unknown error';
-              // Show a more user-friendly message for connection errors
-              const userMessage = errorMessage.includes('establish connection') 
-                ? 'Extension needs to be reloaded. Please refresh the page or restart Chrome.'
-                : errorMessage;
-              showNotification('Failed to open side panel: ' + userMessage, 'error');
-            }
+        if (postElement) {
+          // Remove active class from any previously active post
+          document.querySelectorAll(".active-post").forEach((post) => {
+            post.classList.remove("active-post");
           });
-        } catch (saveError: any) {
-          showNotification('Error saving post text. Try again.', 'error');
+
+          // Add active class to the current post
+          postElement.classList.add("active-post");
+
+          // Extract text from the active post
+          const postText = extractPostText(postElement as HTMLElement);
+          
+          try {
+            await StorageService.set({ [STORAGE_KEYS.LAST_POST_TEXT]: postText });
+            
+            showNotification('Check side panel for comments', 'info');
+            
+            chrome.runtime.sendMessage({ action: "openSidePanel" }, (response) => {
+              if (chrome.runtime.lastError) {
+                const errorMessage = chrome.runtime.lastError.message || 'Unknown error';
+                // Show a more user-friendly message for connection errors
+                const userMessage = errorMessage.includes('establish connection') 
+                  ? 'Extension needs to be reloaded. Please refresh the page or restart Chrome.'
+                  : errorMessage;
+                showNotification('Failed to open side panel: ' + userMessage, 'error');
+              }
+            });
+          } catch (saveError: any) {
+            showNotification('Error saving post text. Try again.', 'error');
+          }
+        } else {
+          showNotification('Could not find the LinkedIn post.', 'error');
         }
-        
       } catch (error: any) {
         showNotification('Error handling comment button click', 'error');
       }
@@ -122,17 +134,24 @@ declare global {
   
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "fillCommentBox" && message.comment) {
-      const activeCommentBox = document.querySelector('[contenteditable="true"][role="textbox"]');
-      
-      if (activeCommentBox) {
-        activeCommentBox.textContent = message.comment;
-        
-        const event = new Event('input', { bubbles: true });
-        activeCommentBox.dispatchEvent(event);
-        
-        (activeCommentBox as HTMLElement).focus();
+      // Find the active post marked by the side panel
+      const activePost = document.querySelector(".active-post");
+
+      if (activePost) {
+        const activeCommentBox = activePost.querySelector('[contenteditable="true"][role="textbox"]');
+
+        if (activeCommentBox) {
+          activeCommentBox.textContent = message.comment;
+
+          const event = new Event("input", { bubbles: true });
+          activeCommentBox.dispatchEvent(event);
+
+          (activeCommentBox as HTMLElement).focus();
+        }
+      } else {
+        console.error("No active post found. Make sure a post is marked as active.");
       }
-      
+
       sendResponse({ success: true });
     }
   });

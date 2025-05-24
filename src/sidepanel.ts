@@ -108,7 +108,7 @@ class SidePanelUI {
         return;
       }
 
-      const content: string = `${postText}\n\n---\n${promptToUse}`;
+      const content: string = `This is a linked post,\n${postText}\n\n---\n${promptToUse}`;
 
       const comments = await openAIService.generateComment(content);
 
@@ -218,21 +218,31 @@ class SidePanelUI {
     });
   }
 
-  // Add this method to handle response variant clicks
   private initResponseHandlers(): void {
     if (!this.elements.gptResponses) return;
 
     this.elements.gptResponses.addEventListener("click", (event) => {
       const target = event.target as HTMLElement;
       if (target.classList.contains("response-variant") && target.textContent) {
+        // Mark the active LinkedIn post
+        const activePost = document.querySelector(".active-post");
+        if (activePost) {
+          activePost.classList.remove("active-post");
+        }
+
+        const postElement = target.closest(".linkedin-post"); // Adjust selector to match LinkedIn post structure
+        if (postElement) {
+          postElement.classList.add("active-post");
+        }
+
         // Send message to content script to fill the comment box
-        chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
           if (tabs[0].id) {
             chrome.tabs.sendMessage(tabs[0].id, {
               action: "fillCommentBox",
-              comment: target.textContent
+              comment: target.textContent,
             });
-            
+
             // Show feedback to user
             if (this.elements.responseStatus) {
               this.elements.responseStatus.textContent = "Comment applied to LinkedIn!";
