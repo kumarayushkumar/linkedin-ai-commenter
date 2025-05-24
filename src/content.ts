@@ -85,7 +85,13 @@ declare global {
           // Optionally open the side panel automatically
           chrome.runtime.sendMessage({ action: "openSidePanel" }, (response) => {
             if (chrome.runtime.lastError) {
-              console.error('Failed to open side panel:', chrome.runtime.lastError);
+              const errorMessage = chrome.runtime.lastError.message || 'Unknown error';
+              console.error('Failed to open side panel:', errorMessage);
+              // Show a more user-friendly message for connection errors
+              const userMessage = errorMessage.includes('establish connection') 
+                ? 'Extension needs to be reloaded. Please refresh the page or restart Chrome.'
+                : errorMessage;
+              uiService.showNotification('Failed to open side panel: ' + userMessage, 'error');
             }
           });
         } catch (saveError: any) {

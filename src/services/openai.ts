@@ -79,26 +79,32 @@ export class OpenAIService {
     } catch (error) {
       console.error("OpenAI API Error:", error);
 
-      const enhancedError = error as OpenAIError;
+      const enhancedError = new Error(
+        error instanceof Error ? error.message : 'Unknown error'
+      ) as OpenAIError;
 
       // Format error message based on type
-      if (enhancedError.message.includes("API key")) {
-        enhancedError.userMessage =
-          "API key not configured. Please update your settings.";
-      } else if (
-        enhancedError.message.includes("rate limit") ||
-        enhancedError.message.includes("quota")
-      ) {
-        enhancedError.userMessage =
-          "API rate limit exceeded. Please try again later.";
-      } else if (
-        enhancedError.message.includes("network") ||
-        enhancedError.message.includes("connect")
-      ) {
-        enhancedError.userMessage =
-          "Network error. Please check your internet connection.";
+      if (error instanceof Error) {
+        if (error.message.includes("API key")) {
+          enhancedError.userMessage =
+            "API key not configured. Please update your settings.";
+        } else if (
+          error.message.includes("rate limit") ||
+          error.message.includes("quota")
+        ) {
+          enhancedError.userMessage =
+            "API rate limit exceeded. Please try again later.";
+        } else if (
+          error.message.includes("network") ||
+          error.message.includes("connect")
+        ) {
+          enhancedError.userMessage =
+            "Network error. Please check your internet connection.";
+        } else {
+          enhancedError.userMessage = error.message || "An error occurred";
+        }
       } else {
-        enhancedError.userMessage = `Error: ${enhancedError.message}`;
+        enhancedError.userMessage = "An unexpected error occurred";
       }
 
       throw enhancedError;
