@@ -122,9 +122,7 @@ class SidePanelUI {
       const customPrompt = await StorageService.get(STORAGE_KEYS.CUSTOM_PROMPT);
       
       // Generate 3 comment variants
-      const comments = await this.openAIService.generateComment(postText, customPrompt, {
-        n: 3
-      });
+      const comments = await this.openAIService.generateComment(postText, customPrompt);
       
       // Parse the response - it might return as a single string with separators
       let commentArray = [];

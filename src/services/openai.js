@@ -14,16 +14,8 @@ class OpenAIService {
    * @param {object} options - Configuration options
    * @returns {Promise<string|string[]>} Generated comment(s)
    */
-  async generateComment(postText, prompt, options = {}) {
+  async generateComment(postText, prompt) {
     try {
-      const {
-        model = AI_SETTINGS.MODEL,
-        temperature = AI_SETTINGS.TEMPERATURE,
-        maxTokens = AI_SETTINGS.MAX_TOKENS,
-        n = 1,
-      } = options;
-
-      // Try to get API key from storage first
       const apiKey = OPENAI_API_KEY;
 
       if (!apiKey || apiKey === "sk-...your-key-here...") {
@@ -39,16 +31,16 @@ class OpenAIService {
             Authorization: `Bearer ${apiKey}`,
           },
           body: JSON.stringify({
-            model,
+            model: AI_SETTINGS.MODEL,
             messages: [
               {
                 role: "developer",
-                content: "You are a content creator with 5 years of experience. And do not use Markdown"
+                content:
+                  "You are a content creator with 5 years of experience. And do not use Markdown",
               },
               { role: "user", content: `${postText}\n\n---\n${prompt}` },
             ],
-            max_tokens: maxTokens,
-            temperature,
+            temperature: AI_SETTINGS.TEMPERATURE,
             n: 3,
           }),
         }
@@ -60,15 +52,11 @@ class OpenAIService {
       }
 
       const data = await response.json();
-      let result;
+      let result = JSON.stringify(data) + JSON.stringify(postText + prompt);
 
-      if (n === 1) {
-        result = data.choices[0]?.message?.content?.trim() || "";
-      } else {
-        result = data.choices.map(
-          (choice) => choice.message?.content?.trim() || ""
-        );
-      }
+      // result = data.choices.map(
+      //   (choice) => choice.message?.content?.trim() || ""
+      // );
 
       console.log("Generated comment:", result);
       return result;
