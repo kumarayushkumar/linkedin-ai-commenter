@@ -91,17 +91,13 @@ class SidePanelUI {
 
     try {
       // Fetch post and prompt data
-      const [postData, promptData, defaultPromptData] = await Promise.all([
-        StorageService.get([STORAGE_KEYS.LAST_POST_TEXT]),
-        StorageService.get(STORAGE_KEYS.CUSTOM_PROMPT),
-        StorageService.get(STORAGE_KEYS.DEFAULT_PROMPT),
-      ]);
+      const dataFromStorage = await StorageService.get([STORAGE_KEYS.LAST_POST_TEXT, STORAGE_KEYS.CUSTOM_PROMPT, STORAGE_KEYS.DEFAULT_PROMPT]);
 
-      const postText = postData[STORAGE_KEYS.LAST_POST_TEXT];
-      
+      const postText = dataFromStorage[STORAGE_KEYS.LAST_POST_TEXT];
+      const customPromptValue = dataFromStorage[STORAGE_KEYS.CUSTOM_PROMPT];
+      const defaultPromptValue = dataFromStorage[STORAGE_KEYS.DEFAULT_PROMPT];
+
       // Use custom prompt if it exists, otherwise use default prompt
-      const customPromptValue = promptData[STORAGE_KEYS.CUSTOM_PROMPT];
-      const defaultPromptValue = defaultPromptData[STORAGE_KEYS.DEFAULT_PROMPT];
       const promptToUse = customPromptValue || defaultPromptValue || "";
 
       if (!postText) {
