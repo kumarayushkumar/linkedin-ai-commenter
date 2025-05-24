@@ -5,7 +5,7 @@
 // Define storage keys upfront for consistency and maintainability
 export const STORAGE_KEYS = {
   EXTENSION_ACTIVE: "extensionActive",
-  DEFAULT_PROMPT: "defaultPrompt",
+  PROMP_TEMPLATE: "defaultPrompt",
   LAST_POST_TEXT: "lastPostText",
   CUSTOM_PROMPT: "customPrompt",
 };

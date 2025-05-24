@@ -2,7 +2,7 @@
 // Handles extension initialization and side panel management
 
 import StorageService, { STORAGE_KEYS } from './services/storage.js';
-import { DEFAULT_PROMPT } from './utils/constants.js';
+import { PROMP_TEMPLATE } from './utils/constants.js';
 import { isApiAvailable } from './utils/helpers.js';
 
 /**
@@ -60,7 +60,7 @@ async function initializeStorage() {
     // Initialize with default values
     await StorageService.set({
       [STORAGE_KEYS.EXTENSION_ACTIVE]: true,
-      [STORAGE_KEYS.DEFAULT_PROMPT]: DEFAULT_PROMPT
+      [STORAGE_KEYS.PROMP_TEMPLATE]: PROMP_TEMPLATE
     });
     
     console.log('Storage initialized with default values');
@@ -82,7 +82,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   } else if (message.action === "getDefaultPrompt") {
     // Send the default prompt from constants
     sendResponse({ 
-      defaultPrompt: DEFAULT_PROMPT 
+      defaultPrompt: PROMP_TEMPLATE 
     });
   }
   return true; // Keep the messaging channel open for async responses

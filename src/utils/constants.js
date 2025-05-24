@@ -26,7 +26,7 @@ export const LINKEDIN_SELECTORS = {
  * Default prompt template
  * This is used when the user hasn't set a custom prompt
  */
-export const DEFAULT_PROMPT = "This is a linked post,\n" +
+export const PROMP_TEMPLATE = "This is a linked post,\n" +
   "Give a comment that is valuable, knowledge, or any additional points I can add to the post, and in last a small conversation starter question\n\n" +
   "Follow these instructions strictly\n" +
   "1. The comment length must be 3-4 lines max and 6-8 words in a line\n" +
