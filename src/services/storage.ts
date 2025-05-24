@@ -4,7 +4,7 @@
 
 export interface StorageKeys {
   EXTENSION_ACTIVE: string;
-  DEFAULT_TEMPLATE: string;
+  DEFAULT_PROMPT: string;
   LAST_POST_TEXT: string;
   CUSTOM_PROMPT: string;
 }
@@ -12,7 +12,7 @@ export interface StorageKeys {
 // Define storage keys upfront for consistency and maintainability
 export const STORAGE_KEYS: StorageKeys = {
   EXTENSION_ACTIVE: "extensionActive",
-  DEFAULT_TEMPLATE: "defaultPrompt",
+  DEFAULT_PROMPT: "defaultPrompt",
   LAST_POST_TEXT: "lastPostText",
   CUSTOM_PROMPT: "customPrompt",
 };

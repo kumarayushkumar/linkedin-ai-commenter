@@ -31,7 +31,7 @@ class SidePanelUI {
       responseStatus: document.getElementById("responseStatus") ?? undefined,
     };
 
-    // Initialize UI 
+    // Initialize UI
     this.initTabSwitching();
     this.initSettingsHandlers();
     this.loadSettings();
@@ -125,13 +125,18 @@ class SidePanelUI {
 
     try {
       // Fetch post and prompt data
-      const [postData, promptData] = await Promise.all([
+      const [postData, promptData, defaultPromptData] = await Promise.all([
         StorageService.get([STORAGE_KEYS.LAST_POST_TEXT]),
         StorageService.get(STORAGE_KEYS.CUSTOM_PROMPT),
+        StorageService.get(STORAGE_KEYS.DEFAULT_PROMPT),
       ]);
 
       const postText = postData[STORAGE_KEYS.LAST_POST_TEXT];
-      const customPrompt = promptData[STORAGE_KEYS.CUSTOM_PROMPT] || "";
+      
+      // Use custom prompt if it exists, otherwise use default prompt
+      const customPromptValue = promptData[STORAGE_KEYS.CUSTOM_PROMPT];
+      const defaultPromptValue = defaultPromptData[STORAGE_KEYS.DEFAULT_PROMPT];
+      const promptToUse = customPromptValue || defaultPromptValue || "";
 
       if (!postText) {
         variants.forEach((variant: HTMLElement) => {
@@ -141,11 +146,9 @@ class SidePanelUI {
         return;
       }
 
-      // Generate 3 comment variants
-      const comments = await openAIService.generateComment(
-        postText,
-        customPrompt
-      );
+      const content: string = `${postText}\n\n---\n${promptToUse}`;
+
+      const comments = await openAIService.generateComment(content);
 
       // Parse the response - it might return as a single string with separators
       let commentArray: string[] = [];

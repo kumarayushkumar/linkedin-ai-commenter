@@ -27,10 +27,7 @@ export class OpenAIService {
    * @param prompt - Custom prompt instructions
    * @returns Generated comment(s)
    */
-  async generateComment(
-    postText: string,
-    prompt: string
-  ): Promise<string | string[]> {
+  async generateComment(content: string): Promise<string | string[]> {
     try {
       if (!this.apiKey) {
         throw new Error("API key not configured");
@@ -48,14 +45,14 @@ export class OpenAIService {
             model: AI_SETTINGS.MODEL,
             messages: [
               {
-                role: "system", // FIXED: was "developer"
+                role: "system",
                 content:
                   "You are a content creator with 5 years of experience. And do not use Markdown",
               },
-              { role: "user", content: `${postText}\n\n---\n${prompt}` },
+              { role: "user", content },
             ],
             temperature: AI_SETTINGS.TEMPERATURE,
-            n: 3,
+            n: AI_SETTINGS.N,
           }),
         }
       );
@@ -66,12 +63,13 @@ export class OpenAIService {
       }
 
       let result = (data.choices || []).map(
-        (choice: { message: { content: string; }; }) => choice.message?.content?.trim() || ""
+        (choice: { message: { content: string } }) =>
+          choice.message?.content?.trim() || ""
       );
       return result;
     } catch (error) {
       const enhancedError = new Error(
-        error instanceof Error ? error.message : 'Unknown error'
+        error instanceof Error ? error.message : "Unknown error"
       ) as OpenAIError;
 
       // Format error message based on type

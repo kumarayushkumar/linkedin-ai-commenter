@@ -1,6 +1,7 @@
 export interface AISettings {
   MODEL: string;
   TEMPERATURE: number;
+  N: number;
 }
 
 export interface LinkedInSelectors {
