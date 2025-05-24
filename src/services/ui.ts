@@ -55,7 +55,7 @@ export class UIService {
     const closeBtn = document.createElement('span');
     closeBtn.innerHTML = '&times;';
     closeBtn.style.cssText = `
-      margin-left: auto;
+      margin-left: 10px;
       cursor: pointer;
       font-size: 18px;
       font-weight: bold;

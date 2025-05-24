@@ -219,7 +219,7 @@ button:hover {
 }
 
 .response-variant::after {
-  content: "Click to copy";
+  content: "Click to use";
   position: absolute;
   top: 4px;
   right: 6px;

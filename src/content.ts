@@ -119,4 +119,21 @@ declare global {
   } else {
     initialize();
   }
+  
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.action === "fillCommentBox" && message.comment) {
+      const activeCommentBox = document.querySelector('[contenteditable="true"][role="textbox"]');
+      
+      if (activeCommentBox) {
+        activeCommentBox.textContent = message.comment;
+        
+        const event = new Event('input', { bubbles: true });
+        activeCommentBox.dispatchEvent(event);
+        
+        (activeCommentBox as HTMLElement).focus();
+      }
+      
+      sendResponse({ success: true });
+    }
+  });
 })();

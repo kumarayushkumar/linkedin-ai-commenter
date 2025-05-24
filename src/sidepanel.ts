@@ -34,8 +34,8 @@ class SidePanelUI {
     // Initialize UI
     this.initTabSwitching();
     this.initSettingsHandlers();
+    this.initResponseHandlers(); // Add this line
     this.loadSettings();
-    this.initResponseHandlers();
 
     // Listen for storage changes to detect when post text is saved
     chrome.storage.onChanged.addListener((changes) => {
@@ -73,40 +73,6 @@ class SidePanelUI {
       if (this.elements.settingsContent)
         this.elements.settingsContent.style.display = "none";
       this.fetchVariants();
-    });
-  }
-
-  // Set up response tab handlers for copying
-  private initResponseHandlers(): void {
-    if (!this.elements.gptResponses || !this.elements.responseStatus) return;
-
-    this.elements.gptResponses.addEventListener("click", (e: MouseEvent) => {
-      const variant = (e.target as HTMLElement).closest(".response-variant");
-      if (variant && variant.textContent !== "Loading...") {
-        const text = variant.textContent || "";
-        navigator.clipboard
-          .writeText(text)
-          .then(() => {
-            if (this.elements.responseStatus) {
-              this.elements.responseStatus.textContent =
-                "Comment copied to clipboard!";
-              setTimeout(() => {
-                if (this.elements.responseStatus)
-                  this.elements.responseStatus.textContent = "";
-              }, 3000);
-            }
-          })
-          .catch((err) => {
-            if (this.elements.responseStatus) {
-              this.elements.responseStatus.textContent =
-                "Failed to copy comment";
-              setTimeout(() => {
-                if (this.elements.responseStatus)
-                  this.elements.responseStatus.textContent = "";
-              }, 3000);
-            }
-          });
-      }
     });
   }
 
@@ -251,6 +217,34 @@ class SidePanelUI {
       if (this.elements.activeToggle) {
         await StorageService.set({
           [STORAGE_KEYS.EXTENSION_ACTIVE]: this.elements.activeToggle.checked,
+        });
+      }
+    });
+  }
+
+  // Add this method to handle response variant clicks
+  private initResponseHandlers(): void {
+    if (!this.elements.gptResponses) return;
+
+    this.elements.gptResponses.addEventListener("click", (event) => {
+      const target = event.target as HTMLElement;
+      if (target.classList.contains("response-variant") && target.textContent) {
+        // Send message to content script to fill the comment box
+        chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+          if (tabs[0].id) {
+            chrome.tabs.sendMessage(tabs[0].id, {
+              action: "fillCommentBox",
+              comment: target.textContent
+            });
+            
+            // Show feedback to user
+            if (this.elements.responseStatus) {
+              this.elements.responseStatus.textContent = "Comment applied to LinkedIn!";
+              setTimeout(() => {
+                if (this.elements.responseStatus) this.elements.responseStatus.textContent = "";
+              }, 3000);
+            }
+          }
         });
       }
     });
