@@ -22,6 +22,4 @@ export interface SidePanelElements {
   activeToggle: HTMLInputElement;
   gptResponses: HTMLElement;
   responseStatus: HTMLElement;
-  saveBtn: HTMLButtonElement;
-  resetBtn: HTMLButtonElement;
 }

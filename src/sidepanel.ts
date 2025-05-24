@@ -1,6 +1,7 @@
 // LinkedIn Auto Commenter - Side Panel Script
 // Handles side panel UI and interactions
 
+import { showNotification } from "./utils/showNotification";
 import openAIService from "./services/openai";
 import StorageService, { STORAGE_KEYS } from "./services/storage";
 import { SidePanelElements } from "./types";
@@ -10,6 +11,8 @@ import { SidePanelElements } from "./types";
  */
 class SidePanelUI {
   private elements: Partial<SidePanelElements>;
+
+  private fetchingVariants = false;
 
   constructor() {
     this.elements = {
@@ -78,7 +81,9 @@ class SidePanelUI {
 
   // Fetch comment variants from OpenAI
   private async fetchVariants(): Promise<void> {
-    if (!this.elements.gptResponses) return;
+    if (!this.elements.gptResponses || this.fetchingVariants) return;
+
+    this.fetchingVariants = true;
 
     // Set all variants to loading state
     const variants =
@@ -138,6 +143,8 @@ class SidePanelUI {
       variants.forEach((variant: HTMLElement) => {
         variant.textContent = "Error generating comment variants";
       });
+    } finally {
+      this.fetchingVariants = false;
     }
   }
 
@@ -186,6 +193,11 @@ class SidePanelUI {
       chrome.runtime.sendMessage(
         { action: "getDefaultPrompt" },
         async (response) => {
+          const lastError = chrome.runtime.lastError;
+          if (lastError) {
+            return;
+          }
+          
           if (response && response.defaultPrompt && this.elements.promptInput) {
             this.elements.promptInput.value = response.defaultPrompt;
 
@@ -293,6 +305,15 @@ class SidePanelUI {
       }
     } else {
       chrome.runtime.sendMessage({ action: "getDefaultPrompt" }, (response) => {
+        const lastError = chrome.runtime.lastError;
+        if (lastError) {
+          showNotification(
+            "Error fetching default prompt: " + lastError.message,
+            "error"
+          );
+          return;
+        }
+        
         if (response && response.defaultPrompt && this.elements.promptInput) {
           this.elements.promptInput.value = response.defaultPrompt;
           if (promptNote) {
@@ -326,12 +347,6 @@ class SidePanelUI {
     this.elements.responseContent.style.display = "";
     this.elements.settingsContent.style.display = "none";
     this.fetchVariants();
-  }
-
-  private clearStatusAfterDelay(): void {
-    setTimeout(() => {
-      if (this.elements.responseStatus) this.elements.responseStatus.textContent = "";
-    }, 3000);
   }
 }
 
