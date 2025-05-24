@@ -1,17 +1,23 @@
 // UI utility service for DOM manipulation
-class UIService {
+import { ButtonOptions } from '../types';
+
+export class UIService {
   /**
    * Wait for an element to appear in the DOM
-   * @param {string} selector - CSS selector for the element
-   * @param {HTMLElement} parent - Parent element to search within (defaults to document)
-   * @param {number} timeoutMs - Maximum time to wait in milliseconds
-   * @returns {Promise<HTMLElement>} - The found element
+   * @param selector - CSS selector for the element
+   * @param parent - Parent element to search within (defaults to document)
+   * @param timeoutMs - Maximum time to wait in milliseconds
+   * @returns The found element
    */
-  waitForElement(selector, parent = document, timeoutMs = 5000) {
+  waitForElement(
+    selector: string,
+    parent: ParentNode = document,
+    timeoutMs: number = 5000
+  ): Promise<HTMLElement> {
     return new Promise((resolve, reject) => {
       const element = parent.querySelector(selector);
       if (element) {
-        resolve(element);
+        resolve(element as HTMLElement);
         return;
       }
 
@@ -25,7 +31,7 @@ class UIService {
         if (element) {
           clearTimeout(timeout);
           observer.disconnect();
-          resolve(element);
+          resolve(element as HTMLElement);
         }
       });
 
@@ -38,13 +44,18 @@ class UIService {
   
   /**
    * Create a button with specified properties
-   * @param {string} text - Button text content
-   * @param {string} styles - CSS styles as a string
-   * @param {Function} clickHandler - Click event handler
-   * @param {Object} options - Additional options (classes, attributes)
-   * @returns {HTMLButtonElement} - The created button
+   * @param text - Button text content
+   * @param styles - CSS styles as a string
+   * @param clickHandler - Click event handler
+   * @param options - Additional options (classes, attributes)
+   * @returns The created button
    */
-  createButton(text, styles, clickHandler, options = {}) {
+  createButton(
+    text: string,
+    styles: string,
+    clickHandler: (event: MouseEvent) => void,
+    options: ButtonOptions = {}
+  ): HTMLButtonElement {
     const button = document.createElement('button');
     button.textContent = text;
     button.style.cssText = styles;
@@ -79,11 +90,11 @@ class UIService {
   
   /**
    * Create a loading spinner element
-   * @param {string} size - Size in pixels (default: '20px')
-   * @param {string} color - Color of the spinner (default: '#0a66c2')
-   * @returns {HTMLDivElement} - The spinner element
+   * @param size - Size in pixels (default: '20px')
+   * @param color - Color of the spinner (default: '#0a66c2')
+   * @returns The spinner element
    */
-  createLoadingSpinner(size = '20px', color = '#0a66c2') {
+  createLoadingSpinner(size: string = '20px', color: string = '#0a66c2'): HTMLDivElement {
     const spinner = document.createElement('div');
     spinner.classList.add('lai-spinner');
     spinner.style.cssText = `
@@ -112,14 +123,18 @@ class UIService {
   
   /**
    * Show notification message
-   * @param {string} message - Message to display
-   * @param {string} type - Notification type: 'info', 'success', 'error', 'warning'
-   * @param {number} duration - How long to show the notification in ms
-   * @returns {HTMLDivElement} - The notification element
+   * @param message - Message to display
+   * @param type - Notification type: 'info', 'success', 'error', 'warning'
+   * @param duration - How long to show the notification in ms
+   * @returns The notification element
    */
-  showNotification(message, type = 'info', duration = 3000) {
+  showNotification(
+    message: string,
+    type: 'info' | 'success' | 'error' | 'warning' = 'info',
+    duration: number = 3000
+  ): HTMLDivElement {
     // Create notification element if it doesn't exist
-    let notification = document.getElementById('lai-notification');
+    let notification = document.getElementById('lai-notification') as HTMLDivElement;
     
     if (!notification) {
       notification = document.createElement('div');
@@ -183,23 +198,23 @@ class UIService {
   
   /**
    * Insert text into a contenteditable element
-   * @param {HTMLElement} element - Target element
-   * @param {string} text - Text to insert
+   * @param element - Target element
+   * @param text - Text to insert
    */
-  insertTextIntoElement(element, text) {
+  insertTextIntoElement(element: HTMLElement, text: string): void {
     element.focus();
-    document.execCommand('selectAll', false, null);
-    document.execCommand('delete', false, null);
+    document.execCommand('selectAll', false);
+    document.execCommand('delete', false);
     document.execCommand('insertText', false, text);
     element.dispatchEvent(new Event('input', { bubbles: true }));
   }
   
   /**
    * Create a loading indicator
-   * @param {string} text - Text to display
-   * @returns {HTMLElement} The loading indicator element
+   * @param text - Text to display
+   * @returns The loading indicator element
    */
-  createLoadingIndicator(text = 'Loading...') {
+  createLoadingIndicator(text: string = 'Loading...'): HTMLDivElement {
     const loadingIndicator = document.createElement('div');
     loadingIndicator.classList.add('lai-loading');
     loadingIndicator.innerHTML = `<span style="margin-right: 5px;">${text}</span>`;

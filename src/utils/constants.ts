@@ -1,10 +1,10 @@
-// Shared constants across the extension
+import { AISettings, LinkedInSelectors } from '../types';
 
 /**
  * AI model settings
  * These control the behavior of the OpenAI API requests
  */
-export const AI_SETTINGS = {
+export const AI_SETTINGS: AISettings = {
   MODEL: "gpt-4o",
   TEMPERATURE: 0.2,
 };
@@ -13,7 +13,7 @@ export const AI_SETTINGS = {
  * LinkedIn DOM selectors
  * Update these if LinkedIn changes their HTML structure
  */
-export const LINKEDIN_SELECTORS = {
+export const LINKEDIN_SELECTORS: LinkedInSelectors = {
   COMMENT_BUTTON: 'button[aria-label="Comment"].artdeco-button--tertiary',
   COMMENT_BOX: '.comments-comment-box-comment__text-editor',
   COMMENT_INPUT: '[data-test-ql-editor-contenteditable="true"]',

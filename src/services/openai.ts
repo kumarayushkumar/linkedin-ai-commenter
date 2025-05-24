@@ -1,24 +1,40 @@
 // API service for handling OpenAI requests
-import { OPENAI_API_KEY } from "../config.js";
-import { AI_SETTINGS } from "../utils/constants.js";
+import { OPENAI_API_KEY } from "../config";
+import { AI_SETTINGS } from "../utils/constants";
 
-class OpenAIService {
+interface OpenAIError extends Error {
+  userMessage?: string;
+}
+
+interface OpenAIResponse {
+  choices: Array<{
+    message?: {
+      content?: string;
+    };
+  }>;
+}
+
+export class OpenAIService {
+  private apiKey: string;
+
   constructor() {
     this.apiKey = OPENAI_API_KEY;
   }
 
   /**
    * Generate a comment for a LinkedIn post
-   * @param {string} postText - The text content of the post
-   * @param {string} prompt - Custom prompt instructions
-   * @param {object} options - Configuration options
-   * @returns {Promise<string|string[]>} Generated comment(s)
+   * @param postText - The text content of the post
+   * @param prompt - Custom prompt instructions
+   * @returns Generated comment(s)
    */
-  async generateComment(postText, prompt) {
+  async generateComment(
+    postText: string,
+    prompt: string
+  ): Promise<string | string[]> {
     try {
       const apiKey = OPENAI_API_KEY;
 
-      if (!apiKey || apiKey === "sk-...your-key-here...") {
+      if (!apiKey) {
         throw new Error("API key not configured");
       }
 
@@ -51,38 +67,41 @@ class OpenAIService {
         throw new Error(error.error?.message || "API Error");
       }
 
-      const data = await response.json();
-      let result = JSON.stringify(data) + JSON.stringify(postText + prompt);
+      const data = (await response.json()) as OpenAIResponse;
+      let result;
 
-      // result = data.choices.map(
-      //   (choice) => choice.message?.content?.trim() || ""
-      // );
+      result = data.choices.map(
+        (choice) => choice.message?.content?.trim() || ""
+      );
 
       console.log("Generated comment:", result);
       return result;
     } catch (error) {
       console.error("OpenAI API Error:", error);
 
+      const enhancedError = error as OpenAIError;
+
       // Format error message based on type
-      if (error.message.includes("API key")) {
-        error.userMessage =
+      if (enhancedError.message.includes("API key")) {
+        enhancedError.userMessage =
           "API key not configured. Please update your settings.";
       } else if (
-        error.message.includes("rate limit") ||
-        error.message.includes("quota")
+        enhancedError.message.includes("rate limit") ||
+        enhancedError.message.includes("quota")
       ) {
-        error.userMessage = "API rate limit exceeded. Please try again later.";
+        enhancedError.userMessage =
+          "API rate limit exceeded. Please try again later.";
       } else if (
-        error.message.includes("network") ||
-        error.message.includes("connect")
+        enhancedError.message.includes("network") ||
+        enhancedError.message.includes("connect")
       ) {
-        error.userMessage =
+        enhancedError.userMessage =
           "Network error. Please check your internet connection.";
       } else {
-        error.userMessage = `Error: ${error.message}`;
+        enhancedError.userMessage = `Error: ${enhancedError.message}`;
       }
 
-      throw error;
+      throw enhancedError;
     }
   }
 }

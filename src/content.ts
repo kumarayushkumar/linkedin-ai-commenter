@@ -1,43 +1,18 @@
 // LinkedIn Auto Commenter - Content Script
-(function() {
-  // We'll load the services through chrome.runtime.getURL
-  let openAIService, storageService, uiService, constants, helpers, STORAGE_KEYS;
-  
-  // Use this to await loading of dependencies
-  async function loadDependencies() {
-    // Get the base URL for your extension
-    const baseURL = chrome.runtime.getURL('src/');
-    
-    // Load dependencies using dynamic import (works in Chrome)
-    const [openAIModule, storageModule, uiModule, constantsModule, helpersModule] = 
-      await Promise.all([
-        import(baseURL + 'services/openai.js'),
-        import(baseURL + 'services/storage.js'),
-        import(baseURL + 'services/ui.js'),
-        import(baseURL + 'utils/constants.js'),
-        import(baseURL + 'utils/helpers.js')
-      ]);
-    
-    // Assign the imported modules to our variables
-    openAIService = openAIModule.default;
-    storageService = storageModule.default;
-    STORAGE_KEYS = storageModule.STORAGE_KEYS;
-    uiService = uiModule.default;
-    constants = constantsModule;
-    helpers = helpersModule;
-    
-    // Get the LinkedIn selectors
-    const SELECTORS = constants.LINKEDIN_SELECTORS;
-    const AI_SETTINGS = constants.AI_SETTINGS;
-    
-    // Now that dependencies are loaded, initialize the extension
-    initLinkedInAutoCommenter(SELECTORS, AI_SETTINGS, helpers);
+import StorageService, { STORAGE_KEYS } from './services/storage';
+import uiService from './services/ui';
+import { LINKEDIN_SELECTORS } from './utils/constants';
+import { createObserver, extractPostText } from './utils/helpers';
+
+declare global {
+  interface Window {
+    chrome: typeof chrome;
   }
-  
+}
+
+(function() {
   // Initialize the extension
-  function initLinkedInAutoCommenter(SELECTORS, AI_SETTINGS, helpers) {
-    const { createObserver, extractPostText } = helpers;
-    
+  function initLinkedInAutoCommenter() {
     // Track URL changes to reinitialize on navigation
     let lastUrl = location.href;
     createObserver(document, () => {
@@ -55,35 +30,37 @@
     function setupCommentListeners() {
       // Create observer for dynamically loaded comment buttons
       createObserver(document.body, () => {
-        const commentButtons = document.querySelectorAll(SELECTORS.COMMENT_BUTTON);
+        const commentButtons = document.querySelectorAll(LINKEDIN_SELECTORS.COMMENT_BUTTON);
         attachEventListeners(commentButtons);
       });
       
       // Initial scan for comment buttons
-      const initialButtons = document.querySelectorAll(SELECTORS.COMMENT_BUTTON);
+      const initialButtons = document.querySelectorAll(LINKEDIN_SELECTORS.COMMENT_BUTTON);
       attachEventListeners(initialButtons);
     }
     
     // Attach event listeners to comment buttons
-    function attachEventListeners(buttons) {
+    function attachEventListeners(buttons: NodeListOf<Element>) {
       buttons.forEach(button => {
         // Prevent duplicate listeners
-        if (button.dataset.autoCommentAttached) return;
-        button.dataset.autoCommentAttached = 'true';
+        if ((button as HTMLElement).dataset.autoCommentAttached) return;
+        (button as HTMLElement).dataset.autoCommentAttached = 'true';
         
-        button.addEventListener('click', handleCommentClick);
+        button.addEventListener('click', (event: Event) => {
+          handleCommentClick.call(button as HTMLElement, event as MouseEvent);
+        });
       });
     }
     
     // Handle comment button click
-    async function handleCommentClick(event) {
+    async function handleCommentClick(this: HTMLElement, event: MouseEvent) {
       try {
         // Check if extension is active
         let isActive = true;
         try {
-          const result = await storageService.get(STORAGE_KEYS.EXTENSION_ACTIVE);
+          const result = await StorageService.get(STORAGE_KEYS.EXTENSION_ACTIVE);
           isActive = result[STORAGE_KEYS.EXTENSION_ACTIVE] !== false;
-        } catch (storageError) {
+        } catch (storageError: any) {
           if (storageError.message && 
               (storageError.message.includes('Extension context invalidated') || 
                storageError.message.includes('Storage get error'))) {
@@ -95,25 +72,28 @@
         if (!isActive) return;
         
         // Find post element and extract text
-        const postElement = this.closest(SELECTORS.POST_CONTAINER);
-        const postText = extractPostText(postElement);
+        const postElement = this.closest(LINKEDIN_SELECTORS.POST_CONTAINER);
+        const postText = extractPostText(postElement as HTMLElement);
         
         // Save post text for side panel
         try {
-          await storageService.set({ [STORAGE_KEYS.LAST_POST_TEXT]: postText });
+          await StorageService.set({ [STORAGE_KEYS.LAST_POST_TEXT]: postText });
           
           // Show notification that variants are ready in side panel
           uiService.showNotification('Post saved! Check side panel for comment variants.', 'info');
           
           // Optionally open the side panel automatically
-          chrome.runtime.sendMessage({ action: "openSidePanel" });
-        } catch (saveError) {
+          chrome.runtime.sendMessage({ action: "openSidePanel" }, (response) => {
+            if (chrome.runtime.lastError) {
+              console.error('Failed to open side panel:', chrome.runtime.lastError);
+            }
+          });
+        } catch (saveError: any) {
           console.error('Failed to save post text:', saveError);
           uiService.showNotification('Error saving post text. Try again.', 'error');
         }
         
-        // No longer generate or insert comment automatically
-      } catch (error) {
+      } catch (error: any) {
         console.error('Comment handling error:', error);
         uiService.showNotification('Error handling comment button click', 'error');
       }
@@ -144,19 +124,16 @@
   async function initialize() {
     addStyles();
     try {
-      await loadDependencies();
       
       // Check storage accessibility
-      const storageAccessible = await storageService.isAccessible();
+      const storageAccessible = await StorageService.isAccessible();
       if (!storageAccessible) {
         console.warn('Extension context invalidated. Page refresh required.');
         return; // Stop initialization
       }
       
       // Now that dependencies are loaded and storage is accessible, initialize the extension
-      const SELECTORS = constants.LINKEDIN_SELECTORS;
-      const AI_SETTINGS = constants.AI_SETTINGS;
-      initLinkedInAutoCommenter(SELECTORS, AI_SETTINGS, helpers);
+      initLinkedInAutoCommenter();
     } catch (error) {
       console.error('Failed to initialize extension:', error);
     }
