@@ -1,6 +1,6 @@
 // LinkedIn Auto Commenter - Content Script
 import StorageService, { STORAGE_KEYS } from './services/storage';
-import uiService from './services/ui';
+import { showNotification }from './utils/showNotification';
 import { LINKEDIN_SELECTORS } from './utils/constants';
 import { createObserver, extractPostText } from './utils/helpers';
 
@@ -63,7 +63,7 @@ declare global {
           if (storageError.message && 
               (storageError.message.includes('Extension context invalidated') || 
                storageError.message.includes('Storage get error'))) {
-            uiService.showNotification('Extension was updated or reloaded. Please refresh the page.', 'warning');
+            showNotification('Extension was updated or reloaded. Please refresh the page.', 'warning');
             return;
           }
         }
@@ -77,7 +77,7 @@ declare global {
         try {
           await StorageService.set({ [STORAGE_KEYS.LAST_POST_TEXT]: postText });
           
-          uiService.showNotification('Check side panel for comments', 'info');
+          showNotification('Check side panel for comments', 'info');
           
           chrome.runtime.sendMessage({ action: "openSidePanel" }, (response) => {
             if (chrome.runtime.lastError) {
@@ -86,15 +86,15 @@ declare global {
               const userMessage = errorMessage.includes('establish connection') 
                 ? 'Extension needs to be reloaded. Please refresh the page or restart Chrome.'
                 : errorMessage;
-              uiService.showNotification('Failed to open side panel: ' + userMessage, 'error');
+              showNotification('Failed to open side panel: ' + userMessage, 'error');
             }
           });
         } catch (saveError: any) {
-          uiService.showNotification('Error saving post text. Try again.', 'error');
+          showNotification('Error saving post text. Try again.', 'error');
         }
         
       } catch (error: any) {
-        uiService.showNotification('Error handling comment button click', 'error');
+        showNotification('Error handling comment button click', 'error');
       }
     }
   }
@@ -103,14 +103,14 @@ declare global {
     try {
       const storageAccessible = await StorageService.isAccessible();
       if (!storageAccessible) {
-        uiService.showNotification('Storage is not accessible. Please check permissions.', 'error');
+        showNotification('Storage is not accessible. Please check permissions.', 'error');
         return;
       }
       
       // Now that dependencies are loaded and storage is accessible, initialize the extension
       initLinkedInAutoCommenter();
     } catch (error) {
-      uiService.showNotification('Failed to initialize extension. Please refresh the page.', 'error');
+      showNotification('Failed to initialize extension. Please refresh the page.', 'error');
     }
   }
   
