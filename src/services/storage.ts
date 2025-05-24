@@ -2,7 +2,6 @@
  * Storage handler for Chrome storage
  */
 
-// Define storage keys upfront for consistency and maintainability
 export const STORAGE_KEYS = {
   EXTENSION_ACTIVE: "extensionActive",
   PROMP_TEMPLATE: "defaultPrompt",
@@ -13,10 +12,10 @@ export const STORAGE_KEYS = {
 class StorageService {
   /**
    * Get data from Chrome storage
-   * @param {string|Array<string>} keys - Keys to retrieve
-   * @returns {Promise<object>} - Storage data
+   * @param keys - Keys to retrieve
+   * @returns Storage data
    */
-  static async get(keys) {
+  static async get(keys: string | string[]): Promise<Record<string, any>> {
     return new Promise((resolve, reject) => {
       try {
         chrome.storage.sync.get(keys, (result) => {
@@ -27,7 +26,7 @@ class StorageService {
             resolve(result);
           }
         });
-      } catch (error) {
+      } catch (error: any) {
         reject(new Error(`Storage get error: ${error.message}`));
       }
     });
@@ -35,10 +34,9 @@ class StorageService {
 
   /**
    * Save data to Chrome storage
-   * @param {object} data - Data to save
-   * @returns {Promise<void>}
+   * @param data - Data to save
    */
-  static async set(data) {
+  static async set(data: Record<string, any>): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
         chrome.storage.sync.set(data, () => {
@@ -49,7 +47,7 @@ class StorageService {
             resolve();
           }
         });
-      } catch (error) {
+      } catch (error: any) {
         reject(new Error(`Storage set error: ${error.message}`));
       }
     });
@@ -57,17 +55,16 @@ class StorageService {
 
   /**
    * Check if storage is accessible
-   * @returns {Promise<boolean>} - Whether storage is accessible
+   * @returns Whether storage is accessible
    */
-  static async isAccessible() {
+  static async isAccessible(): Promise<boolean> {
     try {
-      await this.get('test');
+      await this.get("test");
       return true;
-    } catch (error) {
-      if (error.message && error.message.includes('Extension context invalidated')) {
+    } catch (error: any) {
+      if (error.message && error.message.includes("Extension context invalidated")) {
         return false;
       }
-      // Other errors might be temporary, so we'll assume storage is still accessible
       return true;
     }
   }

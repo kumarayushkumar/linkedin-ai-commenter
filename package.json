@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "@types/chrome": "^0.0.323",
+    "cpx": "^1.5.0",
+    "typescript": "^5.8.3"
+  },
+  "scripts": {
+    "build": "tsc && cpx \"src/sidepanel/*.{html,css}\" dist/sidepanel"
+  }
+}

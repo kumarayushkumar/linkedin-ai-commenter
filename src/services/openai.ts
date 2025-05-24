@@ -1,24 +1,23 @@
 // API service for handling OpenAI requests
-import { OPENAI_API_KEY } from "../config.js";
-import { AI_SETTINGS } from "../utils/constants.js";
+import { OPENAI_API_KEY } from "../config";
+import { AI_SETTINGS } from "../utils/constants";
 
 class OpenAIService {
+  private apiKey: string;
+
   constructor() {
     this.apiKey = OPENAI_API_KEY;
   }
 
   /**
    * Generate a comment for a LinkedIn post
-   * @param {string} postText - The text content of the post
-   * @param {string} prompt - Custom prompt instructions
-   * @param {object} options - Configuration options
-   * @returns {Promise<string|string[]>} Generated comment(s)
+   * @param postText - The text content of the post
+   * @param prompt - Custom prompt instructions
+   * @returns Generated comment(s)
    */
-  async generateComment(postText, prompt) {
+  async generateComment(postText: string, prompt: string): Promise<string> {
     try {
-      const apiKey = OPENAI_API_KEY;
-
-      if (!apiKey || apiKey === "sk-...your-key-here...") {
+      if (!this.apiKey || this.apiKey === "sk-...your-key-here...") {
         throw new Error("API key not configured");
       }
 
@@ -28,7 +27,7 @@ class OpenAIService {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
+            Authorization: `Bearer ${this.apiKey}`,
           },
           body: JSON.stringify({
             model: AI_SETTINGS.MODEL,
@@ -52,21 +51,15 @@ class OpenAIService {
       }
 
       const data = await response.json();
-      let result = JSON.stringify(data) + JSON.stringify(postText + prompt);
-
-      // result = data.choices.map(
-      //   (choice) => choice.message?.content?.trim() || ""
-      // );
+      const result = JSON.stringify(data) + JSON.stringify(postText + prompt);
 
       console.log("Generated comment:", result);
       return result;
-    } catch (error) {
+    } catch (error: any) {
       console.error("OpenAI API Error:", error);
 
-      // Format error message based on type
       if (error.message.includes("API key")) {
-        error.userMessage =
-          "API key not configured. Please update your settings.";
+        error.userMessage = "API key not configured. Please update your settings.";
       } else if (
         error.message.includes("rate limit") ||
         error.message.includes("quota")
@@ -76,8 +69,7 @@ class OpenAIService {
         error.message.includes("network") ||
         error.message.includes("connect")
       ) {
-        error.userMessage =
-          "Network error. Please check your internet connection.";
+        error.userMessage = "Network error. Please check your internet connection.";
       } else {
         error.userMessage = `Error: ${error.message}`;
       }
@@ -87,6 +79,5 @@ class OpenAIService {
   }
 }
 
-// Export as singleton
 const openAIService = new OpenAIService();
 export default openAIService;

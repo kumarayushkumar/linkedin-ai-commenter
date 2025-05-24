@@ -1,25 +1,24 @@
+/// <reference types="chrome" />
+
 // LinkedIn Auto Commenter - Background Script
 // Handles extension initialization and side panel management
 
-import StorageService, { STORAGE_KEYS } from './services/storage.js';
-import { PROMP_TEMPLATE } from './utils/constants.js';
-import { isApiAvailable } from './utils/helpers.js';
+import StorageService, { STORAGE_KEYS } from './services/storage';
+import { PROMP_TEMPLATE } from './utils/constants';
+import { isApiAvailable } from './utils/helpers';
 
 /**
  * Open the side panel for a tab
  * @param {number} tabId - The ID of the tab
  */
-function openSidePanel(tabId) {
-  // Check if side panel API is available
+function openSidePanel(tabId: number): void {
   if (isApiAvailable('sidePanel.setOptions')) {
-    // First set the options for the side panel
     chrome.sidePanel.setOptions({
       tabId: tabId,
       path: "src/sidepanel/sidepanel.html",
       enabled: true
     });
-    
-    // Then open the side panel if that API is available
+
     if (isApiAvailable('sidePanel.open')) {
       chrome.sidePanel.open({ tabId: tabId });
     }
@@ -34,10 +33,9 @@ function openSidePanel(tabId) {
  * @param {string} title - Notification title
  * @param {string} message - Notification message
  */
-function notifyUser(title, message) {
+function notifyUser(title: string, message: string): void {
   console.warn(message);
-  
-  // Check if notifications API is available
+
   if (isApiAvailable('notifications.create')) {
     chrome.notifications.create({
       type: 'basic',
@@ -49,20 +47,18 @@ function notifyUser(title, message) {
 }
 
 // Initialize storage with default values
-async function initializeStorage() {
+async function initializeStorage(): Promise<void> {
   try {
-    // Check if Chrome storage API is available
     if (!isApiAvailable('storage.sync')) {
       console.error('Chrome storage API is not available');
       return;
     }
 
-    // Initialize with default values
     await StorageService.set({
       [STORAGE_KEYS.EXTENSION_ACTIVE]: true,
       [STORAGE_KEYS.PROMP_TEMPLATE]: PROMP_TEMPLATE
     });
-    
+
     console.log('Storage initialized with default values');
   } catch (error) {
     console.error('Failed to initialize storage:', error);
@@ -72,23 +68,22 @@ async function initializeStorage() {
 // Handle extension installation
 chrome.runtime.onInstalled.addListener(() => {
   console.log('LinkedIn Auto Commenter extension installed');
-  initializeStorage(); // Initialize storage on first install
+  initializeStorage();
 });
 
 // Handle messages from content script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "openSidePanel") {
-    openSidePanel(sender.tab.id);
+    openSidePanel(sender.tab?.id || 0);
   } else if (message.action === "getDefaultPrompt") {
-    // Send the default prompt from constants
     sendResponse({ 
       defaultPrompt: PROMP_TEMPLATE 
     });
   }
-  return true; // Keep the messaging channel open for async responses
+  return true;
 });
 
 // Handle extension icon click
 chrome.action.onClicked.addListener((tab) => {
-  openSidePanel(tab.id);
+  openSidePanel(tab.id || 0);
 });

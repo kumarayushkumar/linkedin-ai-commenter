@@ -11,7 +11,7 @@
     "sidePanel"
   ],
   "side_panel": {
-    "default_path": "src/sidepanel/sidepanel.html"
+    "default_path": "dist/sidepanel/sidepanel.html"
   },
   "action": {
     "default_title": "Open LinkedIn Auto Commenter Side Panel",
@@ -30,14 +30,17 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://*.linkedin.com/*"],
-      "js": ["src/content.js"],
+      "matches": [
+        "*://*.linkedin.com/*"
+      ],
+      "js": [
+        "dist/content.js"
+      ],
       "type": "module"
     }
   ],
   "background": {
-    "service_worker": "src/background.js",
-    "type": "module"
+    "service_worker": "dist/background.js"
   },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self';"
@@ -49,18 +52,5 @@
       },
       "description": "Show LinkedIn Auto Commenter Side Panel"
     }
-  },
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "src/config.js",
-        "src/services/openai.js",
-        "src/services/storage.js",
-        "src/services/ui.js",
-        "src/utils/helpers.js",
-        "src/utils/constants.js"
-      ],
-      "matches": ["<all_urls>"]
-    }
-  ]
+  }
 }
