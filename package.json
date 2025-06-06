@@ -1,18 +1,34 @@
 {
-  "name": "linkedin-auto-commenter",
-  "version": "1.0.0",
-  "description": "Chrome extension to write comments on LinkedIn posts automatically",
+  "name": "ai-comment",
+  "displayName": "Ai comment",
+  "version": "0.0.1",
+  "description": "Comment on linkedin post using ai",
+  "author": "",
   "scripts": {
-    "build": "webpack",
-    "watch": "webpack --watch",
-    "dev": "webpack --mode=development --watch"
+    "dev": "plasmo dev",
+    "build": "plasmo build",
+    "package": "plasmo package"
+  },
+  "dependencies": {
+    "plasmo": "0.90.5",
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
   },
   "devDependencies": {
-    "@types/chrome": "^0.0.323",
-    "copy-webpack-plugin": "^13.0.0",
-    "ts-loader": "^9.5.2",
-    "typescript": "^5.8.3",
-    "webpack": "^5.99.9",
-    "webpack-cli": "^6.0.1"
+    "@ianvs/prettier-plugin-sort-imports": "4.1.1",
+    "@types/chrome": "0.0.258",
+    "@types/node": "20.11.5",
+    "@types/react": "18.2.48",
+    "@types/react-dom": "18.2.18",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.4",
+    "prettier": "3.2.4",
+    "tailwindcss": "^3.4.17",
+    "typescript": "5.3.3"
+  },
+  "manifest": {
+    "host_permissions": [
+      "https://*/*"
+    ]
   }
 }

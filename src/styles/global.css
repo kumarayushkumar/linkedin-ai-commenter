@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --primary: hsl(217, 96%, 81%);
+    --secondary: hsl(199, 88%, 87%);
+    --accent: hsl(210, 100%, 17%);
+
+    --black: hsl(0, 0%, 7%);
+    --white: hsl(48, 24%, 96%);
+  }
+}
