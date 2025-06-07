@@ -4,11 +4,49 @@
 
 @layer base {
   :root {
-    --primary: hsl(217, 96%, 81%);
-    --secondary: hsl(199, 88%, 87%);
-    --accent: hsl(210, 100%, 17%);
+    --primary: 217, 96%, 81%;
+    --secondary: 199, 88%, 87%;
+    --accent: 210, 100%, 17%;
 
-    --black: hsl(0, 0%, 7%);
-    --white: hsl(48, 24%, 96%);
+    --black: 0, 0%, 7%;
   }
+}
+
+* {
+  @apply text-sm;
+}
+
+/* Style the checkbox as a toggle switch */
+#activeToggle {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 50px;
+  height: 24px;
+  background-color: #ccc;
+  border-radius: 24px;
+  position: relative;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.3s;
+
+}
+
+#activeToggle:checked {
+  background-color: rgb(64, 216, 18);
+}
+
+#activeToggle:before {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 100%;
+  top: 2px;
+  left: 2px;
+  background-color: white;
+  transition: transform 0.3s;
+}
+
+#activeToggle:checked:before {
+  transform: translateX(26px);
 }
