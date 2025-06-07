@@ -258,7 +258,7 @@ function IndexSidePanel() {
 
         {activeTab === 'settings' && (
           <div id='settingsTab' className="settings-tab pt-4 flex flex-col gap-4">
-            <div className="toggle-container flex items-center justify-between relative gap-2">
+            <div className="flex items-center justify-between relative gap-2">
               <label className="block font-medium" htmlFor="activeToggle">
                 Enable Extension
               </label>
