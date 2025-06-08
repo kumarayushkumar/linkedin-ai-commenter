@@ -30,12 +30,16 @@ function IndexSidePanel() {
     
     setupLastPostTextWatcher()
     
+    // Fetch variants when side panel first opens
+    fetchVariants()
+    
     // Listen for custom storage change events
     const handleStorageChange = (e: CustomEvent) => {
       if (e.detail.key === STORAGE_KEYS.LAST_POST_TEXT) {
         // Auto-switch to comment tab when post text is saved
         setActiveTab('comment')
-        fetchVariants()
+        // Add a small delay to ensure storage is fully updated
+        setTimeout(() => fetchVariants(), 100)
       }
     }
     
@@ -116,10 +120,12 @@ function IndexSidePanel() {
   
   // Fetch comment variants from OpenAI
   const fetchVariants = async () => {
+    // Prevent multiple simultaneous fetches
     if (fetchingComments) return
     
     setFetchingComments(true)
     setComments(['Loading...', 'Loading...', 'Loading...'])
+    setResponseStatusMessage('') // Clear any previous status messages
     
     try {
       // Fetch post and prompt data
@@ -130,22 +136,25 @@ function IndexSidePanel() {
       ])
       
       const postText = dataFromStorage[STORAGE_KEYS.LAST_POST_TEXT]
+      // Extract actual post text (remove timestamp if present)
+      const actualPostText = postText ? postText.split('|||')[0] : ''
       const customPromptValue = dataFromStorage[STORAGE_KEYS.CUSTOM_PROMPT]
       const defaultPromptValue = dataFromStorage[STORAGE_KEYS.DEFAULT_PROMPT] || DEFAULT_PROMPT
       
       // Use custom prompt if it exists, otherwise use default prompt
       const promptToUse = customPromptValue || defaultPromptValue
       
-      if (!postText) {
+      if (!actualPostText) {
         setComments([
           'No post selected. Click on a LinkedIn post comment button first.',
           'No post selected. Click on a LinkedIn post comment button first.',
           'No post selected. Click on a LinkedIn post comment button first.'
         ])
+        setFetchingComments(false)
         return
       }
       
-      const content = `This is a linked post,\n${postText}\n\n---\n${promptToUse}`
+      const content = `This is a linked post,\n${actualPostText}\n\n---\n${promptToUse}`
       
       const generatedComments = await openAIService.generateComment(content)
       
@@ -238,6 +247,16 @@ function IndexSidePanel() {
       <div className="flex-1 p-4">
         {activeTab === 'comment' && (
           <div id="commentTab" className="comment-tab pt-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">AI Comment Suggestions</h3>
+              <button 
+                className="bg-accent text-white px-3 py-1 text-sm rounded cursor-pointer transition-all duration-200 hover:bg-opacity-80"
+                onClick={fetchVariants}
+                disabled={fetchingComments}
+              >
+                {fetchingComments ? 'Loading...' : 'Refresh'}
+              </button>
+            </div>
             <div id="comments" className='flex flex-col gap-4'>
               {comments.map((comment, index) => (
                 <div 

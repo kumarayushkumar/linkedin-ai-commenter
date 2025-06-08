@@ -101,8 +101,9 @@ declare global {
           const postText = extractPostText(postElement as HTMLElement);
 
           try {
+            const postDataWithTimestamp = `${postText}|||${Date.now()}`;
             await StorageService.set({
-              [STORAGE_KEYS.LAST_POST_TEXT]: postText,
+              [STORAGE_KEYS.LAST_POST_TEXT]: postDataWithTimestamp,
             });
 
             showNotification("Check side panel for comments", "info");
