@@ -100,6 +100,13 @@ function IndexSidePanel() {
     }
   }, [])
 
+  // Watch for changes in extension active state
+  useEffect(() => {
+    if (activeTab === 'comment') {
+      fetchVariants()
+    }
+  }, [isExtensionActive])
+
   // Load settings from storage
   const loadSettings = async () => {
     try {
@@ -142,6 +149,9 @@ function IndexSidePanel() {
       setIsExtensionActive(activeToggleRef.current?.checked || false)
 
       showStatusMessage('Settings saved!')
+      
+      // Refresh comments to reflect the new active state
+      fetchVariants()
     } catch (error) {
       showStatusMessage('Error saving settings')
     }
@@ -179,8 +189,21 @@ function IndexSidePanel() {
       const dataFromStorage = await StorageService.get([
         STORAGE_KEYS.LAST_POST_TEXT,
         STORAGE_KEYS.CUSTOM_PROMPT,
-        STORAGE_KEYS.DEFAULT_PROMPT
+        STORAGE_KEYS.DEFAULT_PROMPT,
+        STORAGE_KEYS.EXTENSION_ACTIVE
       ])
+
+      // Check if extension is active
+      const isActive = dataFromStorage[STORAGE_KEYS.EXTENSION_ACTIVE] !== false
+      if (!isActive) {
+        setComments([
+          'Extension is disabled. Enable it in settings to generate comments.',
+          'Extension is disabled. Enable it in settings to generate comments.',
+          'Extension is disabled. Enable it in settings to generate comments.'
+        ])
+        setFetchingComments(false)
+        return
+      }
 
       const postText = dataFromStorage[STORAGE_KEYS.LAST_POST_TEXT]
       // Extract actual post text (remove timestamp if present)
@@ -243,10 +266,17 @@ function IndexSidePanel() {
 
   // Handle comment variant click
   const handleCommentClick = (comment: string) => {
+    // Check if extension is active before applying comment
+    if (!isExtensionActive) {
+      showResponseStatusMessage('Extension is disabled. Enable it in settings first.')
+      return
+    }
+
     if (
       !comment ||
       comment.includes('No post selected') ||
-      comment.includes('Error generating')
+      comment.includes('Error generating') ||
+      comment.includes('Extension is disabled')
     ) {
       showResponseStatusMessage('Cannot use this comment')
       return
@@ -306,9 +336,13 @@ function IndexSidePanel() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">AI Comment Suggestions</h3>
               <button
-                className="bg-accent text-white px-3 py-1 text-sm rounded cursor-pointer transition-all duration-200 hover:bg-opacity-80"
+                className={`px-3 py-1 text-sm rounded cursor-pointer transition-all duration-200 ${
+                  isExtensionActive && !fetchingComments
+                    ? 'bg-accent text-white hover:bg-opacity-80'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
                 onClick={fetchVariants}
-                disabled={fetchingComments}>
+                disabled={fetchingComments || !isExtensionActive}>
                 {fetchingComments ? 'Loading...' : 'Refresh'}
               </button>
             </div>
@@ -316,7 +350,11 @@ function IndexSidePanel() {
               {comments.map((comment, index) => (
                 <div
                   key={index}
-                  className="comment-variant bg-secondary pt-5 p-4 cursor-pointer transition-all duration-200 border-l-[3px] border-accent relative hover:bg-white hover:-translate-y-0.5 hover:shadow-md after:content-['Click_to_use'] after:absolute after:top-1 after:right-2 after:text-xs after:opacity-0 after:text-accent after:transition-opacity hover:after:opacity-100"
+                  className={`comment-variant pt-5 p-4 transition-all duration-200 border-l-[3px] border-accent relative ${
+                    isExtensionActive && !comment.includes('Extension is disabled')
+                      ? 'bg-secondary cursor-pointer hover:bg-white hover:-translate-y-0.5 hover:shadow-md after:content-[\'Click_to_use\'] after:absolute after:top-1 after:right-2 after:text-xs after:opacity-0 after:text-accent after:transition-opacity hover:after:opacity-100'
+                      : 'bg-gray-100 cursor-not-allowed opacity-60'
+                  }`}
                   data-idx={index}
                   onClick={() => handleCommentClick(comment)}>
                   {comment}

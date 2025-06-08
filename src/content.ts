@@ -89,7 +89,10 @@ declare global {
           }
         }
 
-        if (!isActive) return;
+        if (!isActive) {
+          showNotification("Extension is disabled. Enable it in the side panel settings.", "info");
+          return;
+        }
 
         // Find post element and mark it as active
         const postElement = this.closest(LINKEDIN_SELECTORS.POST_CONTAINER);
