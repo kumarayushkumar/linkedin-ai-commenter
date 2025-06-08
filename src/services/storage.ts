@@ -1,6 +1,7 @@
 /**
  * Storage handler for Plasmo extension storage
  */
+
 import { Storage } from "@plasmohq/storage";
 
 export interface StorageKeys {

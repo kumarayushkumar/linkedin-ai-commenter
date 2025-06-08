@@ -1,4 +1,8 @@
-// Background service worker for LinkedIn Auto Commenter
+/** 
+ * Background script for the Chrome extension
+ * Handles installation, updates, and side panel interactions
+ */
+
 import StorageService, { STORAGE_KEYS } from "./services/storage";
 import { showBackgroundNotification } from "./utils/notification";
 import { DEFAULT_PROMPT } from "./utils/constants";

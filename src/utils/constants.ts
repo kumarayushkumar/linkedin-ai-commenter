@@ -1,3 +1,8 @@
+/**
+ * Constants for the LinkedIn Auto Commenter Extension
+ * This file contains settings for AI model, LinkedIn DOM selectors, and default prompt.
+ */
+
 import type { AISettings, LinkedInSelectors } from "../types";
 
 /**

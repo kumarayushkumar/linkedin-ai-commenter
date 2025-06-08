@@ -1,3 +1,7 @@
+/**
+ * TypeScript interfaces for various configurations and settings used in the application.
+ */
+
 export interface AISettings {
   MODEL: string;
   TEMPERATURE: number;

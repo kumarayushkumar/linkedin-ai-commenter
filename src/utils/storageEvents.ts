@@ -1,6 +1,7 @@
 /**
  * Storage events system for listening to changes in Plasmo storage
  */
+
 import { STORAGE_KEYS, storage } from "../services/storage"
 
 /**

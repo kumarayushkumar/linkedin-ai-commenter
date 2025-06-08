@@ -1,4 +1,9 @@
-// LinkedIn Auto Commenter - Content Script
+/**
+ * LinkedIn Auto Commenter Content Script
+ * This script runs on LinkedIn pages to automatically handle comment interactions
+ * and integrate with the side panel for AI-generated comments.
+ */
+
 import StorageService, { STORAGE_KEYS } from "./services/storage";
 import { LINKEDIN_SELECTORS } from "./utils/constants";
 import { createObserver, extractPostText } from "./utils/helpers";

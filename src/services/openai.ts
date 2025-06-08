@@ -1,4 +1,9 @@
-// API service for handling OpenAI requests
+/**
+ * OpenAI Service for generating comments on LinkedIn posts
+ * This service interacts with the OpenAI API to generate comments based on post content.
+ * It handles API errors and provides user-friendly messages.
+ */
+
 import { OPENAI_API_KEY } from "../config";
 import { AI_SETTINGS } from "../utils/constants";
 
