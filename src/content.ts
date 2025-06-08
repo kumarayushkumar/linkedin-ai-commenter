@@ -2,7 +2,7 @@
 import StorageService, { STORAGE_KEYS } from "./services/storage";
 import { LINKEDIN_SELECTORS } from "./utils/constants";
 import { createObserver, extractPostText } from "./utils/helpers";
-import { showNotification } from "./utils/showNotification";
+import { showNotification } from "./utils/notification";
 
 declare global {
   interface Window {
